@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能光伏助手</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 添加AOS动画库 -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- 添加Three.js用于背景粒子效果 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 添加Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 新增炫酷样式 */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .phone-frame {
+            position: relative;
+            border-radius: 3rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s ease;
+            background: #000; /* 手机边框颜色 */
+            padding: 12px 10px; /* 手机边框内边距 */
+            height: 750px; /* 调整手机高度 */
+            width: 350px; /* 设置手机宽度 */
+            margin: 0 auto; /* 居中显示 */
+        }
+        
+        .phone-frame:hover {
+            transform: translateY(-10px) rotate3d(1, 1, 1, 2deg);
+            box-shadow: 0 30px 60px -12px rgba(59, 130, 246, 0.5), 
+                        0 0 20px 5px rgba(59, 130, 246, 0.2);
+        }
+        
+        .phone-screen {
+            position: relative;
+            border-radius: 2.5rem;
+            overflow: hidden;
+            background: #fff;
+            height: calc(100% - 6px);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .phone-frame::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: #000;
+            border-radius: 3rem 3rem 0 0;
+            z-index: 10;
+        }
+        
+        .phone-notch {
+            position: absolute;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 15px 15px;
+            z-index: 12;
+        }
+        
+        .phone-button {
+            position: absolute;
+            right: -3px;
+            top: 120px;
+            width: 3px;
+            height: 35px;
+            background: #333;
+            border-radius: 3px 0 0 3px;
+        }
+        
+        .phone-button.volume-up {
+            top: 180px;
+        }
+        
+        .phone-button.volume-down {
+            top: 230px;
+        }
+        
+        .phone-time {
+            position: absolute;
+            top: 6px;
+            left: 25px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 15;
+        }
+        
+        .phone-icons {
+            position: absolute;
+            top: 6px;
+            right: 25px;
+            color: white;
+            font-size: 12px;
+            z-index: 15;
+        }
+        
+        .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.3), transparent 70%);
+            pointer-events: none;
+            z-index: 5;
+            mix-blend-mode: screen;
+        }
+        
+        .title-gradient {
+            background: linear-gradient(90deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            background: linear-gradient(90deg, #93c5fd, #6ee7b7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 3rem;
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .footer-gradient {
+            background: linear-gradient(90deg, #1e40af, #065f46);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-top: 4rem;
+        }
+        
+        .showcase-section {
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .showcase-section:nth-child(even) {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        
+        .showcase-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .showcase-desc {
+            font-size: 1.25rem;
+            color: #cbd5e1;
+            max-width: 600px;
+            line-height: 1.7;
+        }
+        
+        .feature-point {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-point i {
+            color: #3b82f6;
+            margin-right: 10px;
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+     
+        .rotate-item {
+            position: absolute;
+            width: 300px;
+            height: 600px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            backface-visibility: hidden;
+        }
+        
+        /* 水平滚动展示区 */
+        .horizontal-scroll {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 30px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .horizontal-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scroll-item {
+            display: inline-block;
+            margin-right: 20px;
+            width: 300px;
+            white-space: normal;
+            vertical-align: top;
+        }
+        
+        /* 功能比较表 */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .comparison-table th {
+            background: rgba(15, 23, 42, 0.5);
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .comparison-table tr:nth-child(odd) {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        
+        .comparison-table tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 数据统计卡片 */
+        .stat-card {
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        /* 应用场景 */
+        .scenario-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            height: 250px;
+        }
+        
+        .scenario-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .scenario-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .scenario-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px;
+            color: white;
+        }
+        
+        /* 固定导航 */
+        .fixed-nav {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .nav-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active, .nav-item:hover {
+            background: #3b82f6;
+            transform: scale(1.2);
+        }
+        
+        /* 视差效果 */
+        .parallax-bg {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            padding: 150px 0;
+            position: relative;
+        }
+        
+        .parallax-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.7);
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* 添加响应式设计 */
+        @media (max-width: 1200px) {
+            .phone-frame {
+                height: 700px;
+                width: 320px;
+            }
+            
+            .fixed-nav {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .showcase-row {
+                flex-direction: column-reverse;
+            }
+            
+            .showcase-row:nth-child(even) {
+                flex-direction: column-reverse;
+            }
+            
+            .phone-frame {
+                height: 650px;
+                width: 300px;
+                margin-bottom: 40px;
+            }
+            
+            .title-gradient {
+                font-size: 2.5rem;
+            }
+            
+            .showcase-title {
+                font-size: 2rem;
+                text-align: center;
+            }
+            
+            .showcase-desc {
+                text-align: center;
+                margin: 0 auto;
+            }
+            
+            .rotate-showcase {
+                height: 400px;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="particles-bg"></div>
+    
+    <!-- 固定导航 -->
+    <div class="fixed-nav">
+        <div class="nav-item active" data-target="intro"></div>
+        <div class="nav-item" data-target="features"></div>
+        <div class="nav-item" data-target="scenarios"></div>
+        <div class="nav-item" data-target="home"></div>
+        <div class="nav-item" data-target="monitoring"></div>
+        <div class="nav-item" data-target="devices"></div>
+        <div class="nav-item" data-target="analytics"></div>
+        <div class="nav-item" data-target="settings"></div>
+        <div class="nav-item" data-target="cta"></div>
+    </div>
+
+    <div class="mx-auto py-10">
+       <!-- 头部介绍 -->
+<section id="intro" class="py-20">
+    <div class="container mx-auto px-4">
+        <h1 class="title-gradient" data-aos="zoom-in">智能光伏助手原型</h1>
+        
+        <div class="max-w-5xl mx-auto mb-16 text-center" data-aos="fade-up" data-aos-delay="200">
+            <p class="subtitle">专为家庭用户打造的光伏管理解决方案，让您轻松管理屋顶光伏系统</p>
+        </div>
+        
+       
+        
+        <!-- 数据统计展示 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-20 mb-10">
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-number">25%</div>
+                <div class="text-blue-200 font-semibold">家庭用电节省</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-number">24/7</div>
+                <div class="text-blue-200 font-semibold">全天候监控</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-number">10+</div>
+                <div class="text-blue-200 font-semibold">光伏品牌兼容</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-number">3年</div>
+                <div class="text-blue-200 font-semibold">投资回收缩短</div>
+            </div>
+        </div>
+    </div>
+</section>
+        
+        <!-- 特点展示 -->
+        <section id="features" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <h2 class="showcase-title text-center mb-12" data-aos="fade-up">核心特点</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-20">
+                    <div class="feature-item" data-aos="fade-right" data-aos-delay="300">
+                        <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-200">实时监控</h3>
+                        <p class="text-gray-300">随时了解家庭光伏系统性能和屋顶发电情况</p>
+                    </div>
+                    <div class="feature-item" data-aos="fade-up" data-aos-delay="400">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-200">智能分析</h3>
+                        <p class="text-gray-300">利用AI技术分析家庭用电模式，提供节能建议</p>
+                    </div>
+                    <div class="feature-item" data-aos="fade-left" data-aos-delay="500">
+                        <div class="feature-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <h3 class="text-xl font-bold mb-2 text-blue-200">降低电费</h3>
+                        <p class="text-gray-300">优化家庭用电计划，最大化光伏发电收益</p>
+                    </div>
+                </div>
+                
+                <!-- 功能比较表 -->
+                <div class="max-w-5xl mx-auto" data-aos="fade-up" data-aos-delay="600">
+                    <h3 class="text-xl font-bold mb-4 text-center text-blue-200">对比传统家庭光伏监控方案</h3>
+                    <div class="overflow-x-auto">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>功能</th>
+                                    <th>智能光伏助手</th>
+                                    <th>传统监控系统</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>手机APP监控</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 全功能移动应用</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 基础查看功能</td>
+                                </tr>
+                                <tr>
+                                    <td>个性化用电建议</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 基于AI分析</td>
+                                    <td><i class="fas fa-times text-red-500"></i> 不支持</td>
+                                </tr>
+                                <tr>
+                                    <td>电池管理</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 智能充放电</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 基础管理</td>
+                                </tr>
+                                <tr>
+                                    <td>故障诊断</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 提前预警</td>
+                                    <td><i class="fas fa-times text-red-500"></i> 故障后报警</td>
+                                </tr>
+                                <tr>
+                                    <td>季节性优化</td>
+                                    <td><i class="fas fa-check text-green-500"></i> 自动适应</td>
+                                    <td><i class="fas fa-times text-red-500"></i> 需手动调整</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="scenarios" class="pt-20 pb-10">
+            <div class="container mx-auto px-4">
+                <h2 class="showcase-title text-center mb-12" data-aos="fade-up">家庭应用场景</h2>
+                <!-- 修改水平滚动区域 -->
+                <div class="horizontal-scroll" data-aos="fade-up" style="margin: 0 -10px; padding: 30px 150px;">
+                    <!-- 屋顶光伏系统 -->
+                    <div class="scroll-item" style="width: 300px; padding: 0 5px;">
+                        <div class="scenario-card" style="height: 250px; overflow: hidden; border-radius: 1rem; position: relative;">
+                            <img src="https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" 
+                                 alt="居民屋顶光伏" 
+                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+                            <div class="scenario-overlay">
+                                <h3 class="text-lg font-bold">屋顶光伏系统</h3>
+                                <p class="text-sm">监控屋顶太阳能板性能，确保最佳发电效率</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 智能家庭用电 -->
+                    <div class="scroll-item" style="width: 300px; padding: 0 5px;">
+                        <div class="scenario-card" style="height: 250px; overflow: hidden; border-radius: 1rem; position: relative;">
+                            <img src="https://pic.rmb.bdstatic.com/bjh/events/58cf9d5adec98e2cac8095ceb1cb7182.jpeg@h_1280" 
+                                 alt="家庭智能用电" 
+                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+                            <div class="scenario-overlay">
+                                <h3 class="text-lg font-bold">智能家庭用电</h3>
+                                <p class="text-sm">优化家电用电时间，最大化自发自用率</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 家庭储能管理 -->
+                    <div class="scroll-item" style="width: 300px; padding: 0 5px;">
+                        <div class="scenario-card" style="height: 250px; overflow: hidden; border-radius: 1rem; position: relative;">
+                            <img src="https://q4.itc.cn/images01/20240715/ff712e983c3547dbbaaa9590240827ee.jpeg" 
+                                 alt="家庭储能系统" 
+                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+                            <div class="scenario-overlay">
+                                <h3 class="text-lg font-bold">家庭储能管理</h3>
+                                <p class="text-sm">智能管理家庭电池储能，应对峰谷电价</p>
+                            </div>
+                        </div>
+                    </div>
+                 
+                    <!-- 余电上网收益 -->
+                    <div class="scroll-item" style="width: 300px; padding: 0 5px; margin-right: 30px;">
+                        <div class="scenario-card" style="height: 250px; overflow: hidden; border-radius: 1rem; position: relative;">
+                            <img src="https://img1.baidu.com/it/u=1876171033,2536483227&fm=253&fmt=auto&app=120&f=JPEG?w=750&h=500" 
+                                 alt="光伏余电上网" 
+                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+                            <div class="scenario-overlay">
+                                <h3 class="text-lg font-bold">余电上网收益</h3>
+                                <p class="text-sm">轻松管理光伏余电上网，计算收益情况</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 首页展示 - 类似苹果风格 -->
+        <section id="home" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap items-center showcase-row">
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-right">
+                        <h2 class="showcase-title">一目了然的主页</h2>
+                        <div class="section-divider"></div>
+                        <p class="showcase-desc mb-6">
+                            简洁直观的界面设计，让家庭成员一眼就能看懂光伏系统的状态。全新的卡片式布局使信息一目了然，即使没有专业知识也能轻松管理。
+                        </p>
+                        
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>当日发电量和用电量直观展示</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>实时监测系统状态和健康情况</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>一键查看当日电费节省情况</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>智能建议提醒最佳用电时段</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-left">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <div class="phone-time">9:41</div>
+                            <div class="phone-icons">
+                                <i class="fas fa-signal"></i>
+                                <i class="fas fa-wifi ml-2"></i>
+                                <i class="fas fa-battery-full ml-2"></i>
+                            </div>
+                            <div class="phone-button"></div>
+                            <div class="phone-button volume-up"></div>
+                            <div class="phone-button volume-down"></div>
+                            <div class="phone-screen">
+                                <div class="glow"></div>
+                                <iframe src="pages/home.html" class="w-full h-full" style="border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 发电监控展示 -->
+        <section id="monitoring" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap items-center showcase-row flex-row-reverse">
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-left">
+                        <h2 class="showcase-title">家庭发电监控</h2>
+                        <div class="section-divider"></div>
+                        <p class="showcase-desc mb-6">
+                            直观了解您家屋顶光伏系统的实时发电情况，通过精美的图表对比不同时段、不同天气下的发电表现，轻松掌握系统效率。
+                        </p>
+                        
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>实时监测屋顶各组件发电情况</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>天气影响分析，预测当日发电量</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>随时对比历史发电数据，查找异常</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>发电量与家庭用电匹配度分析</span>
+                        </div>
+                        
+                        <!-- 添加一个实时数据图表 -->
+                        <div class="mt-8 bg-gray-900 p-4 rounded-lg" data-aos="fade-up">
+                            <h4 class="text-lg font-bold text-blue-200 mb-2">家庭日发电曲线</h4>
+                            <canvas id="powerChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-right">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <div class="phone-time">9:41</div>
+                            <div class="phone-icons">
+                                <i class="fas fa-signal"></i>
+                                <i class="fas fa-wifi ml-2"></i>
+                                <i class="fas fa-battery-full ml-2"></i>
+                            </div>
+                            <div class="phone-button"></div>
+                            <div class="phone-button volume-up"></div>
+                            <div class="phone-button volume-down"></div>
+                            <div class="phone-screen">
+                                <div class="glow"></div>
+                                <iframe src="pages/monitoring.html" class="w-full h-full" style="border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 设备管理展示 -->
+        <section id="devices" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap items-center showcase-row">
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-right">
+                        <h2 class="showcase-title">家庭设备管理</h2>
+                        <div class="section-divider"></div>
+                        <p class="showcase-desc mb-6">
+                            轻松管理家中的光伏组件、逆变器和储能设备。系统会自动检测设备状态并提供维护建议，延长设备寿命，无需专业知识也能掌握。
+                        </p>
+                        
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>光伏组件健康状态一目了然</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>逆变器工作状态实时监测</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>智能提醒组件清洁和维护时间</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>储能电池充放电策略优化</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-left">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <div class="phone-time">9:41</div>
+                            <div class="phone-icons">
+                                <i class="fas fa-signal"></i>
+                                <i class="fas fa-wifi ml-2"></i>
+                                <i class="fas fa-battery-full ml-2"></i>
+                            </div>
+                            <div class="phone-button"></div>
+                            <div class="phone-button volume-up"></div>
+                            <div class="phone-button volume-down"></div>
+                            <div class="phone-screen">
+                                <div class="glow"></div>
+                                <iframe src="pages/devices.html" class="w-full h-full" style="border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 数据分析展示 -->
+        <section id="analytics" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap items-center showcase-row flex-row-reverse">
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-left">
+                        <h2 class="showcase-title">家庭用电分析</h2>
+                        <div class="section-divider"></div>
+                        <p class="showcase-desc mb-6">
+                            智能分析您家庭的用电习惯，找出节能空间，并提供个性化的用电建议。了解家中哪些电器耗电最多，如何合理安排使用时间以配合光伏发电。
+                        </p>
+                        
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>家庭用电习惯智能分析</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>主要电器用电量占比展示</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>光伏自发自用率计算与优化</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>个性化节能省钱建议</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-right">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <div class="phone-time">9:41</div>
+                            <div class="phone-icons">
+                                <i class="fas fa-signal"></i>
+                                <i class="fas fa-wifi ml-2"></i>
+                                <i class="fas fa-battery-full ml-2"></i>
+                            </div>
+                            <div class="phone-button"></div>
+                            <div class="phone-button volume-up"></div>
+                            <div class="phone-button volume-down"></div>
+                            <div class="phone-screen">
+                                <div class="glow"></div>
+                                <iframe src="pages/analytics.html" class="w-full h-full" style="border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 设置展示 -->
+        <section id="settings" class="showcase-section">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap items-center showcase-row">
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-right">
+                        <h2 class="showcase-title">个性化家庭设置</h2>
+                        <div class="section-divider"></div>
+                        <p class="showcase-desc mb-6">
+                            根据您家庭的需求定制光伏系统的运行方式。设置家庭用电优先级、储能策略以及通知提醒，让系统完全适应您的生活习惯。
+                        </p>
+                        
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>家庭成员账号与权限管理</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>用电高峰期智能提醒设置</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>电池储能优先级与策略定制</span>
+                        </div>
+                        <div class="feature-point">
+                            <i class="fas fa-check-circle"></i>
+                            <span>季节性用电模式自动切换</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 p-4" data-aos="fade-left">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <div class="phone-time">9:41</div>
+                            <div class="phone-icons">
+                                <i class="fas fa-signal"></i>
+                                <i class="fas fa-wifi ml-2"></i>
+                                <i class="fas fa-battery-full ml-2"></i>
+                            </div>
+                            <div class="phone-button"></div>
+                            <div class="phone-button volume-up"></div>
+                            <div class="phone-button volume-down"></div>
+                            <div class="phone-screen">
+                                <div class="glow"></div>
+                                <iframe src="pages/settings.html" class="w-full h-full" style="border: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 视差背景部分 -->
+        <section class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1592833167344-45771ea33b9a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');">
+            <div class="parallax-overlay"></div>
+            <div class="parallax-content">
+                <h2 class="text-4xl font-bold text-white mb-6" data-aos="fade-up">家庭绿色能源的智慧管家</h2>
+                <p class="text-xl text-blue-100 mb-8" data-aos="fade-up" data-aos-delay="200">让每个家庭都能轻松管理自己的光伏系统，享受清洁能源带来的便利与节省。</p>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transform transition hover:scale-105 focus:outline-none" data-aos="zoom-in" data-aos-delay="400">
+                    免费试用
+                </button>
+            </div>
+        </section>
+
+        <div id="cta" class="container mx-auto px-4">
+            <div class="footer-gradient text-center mt-10" data-aos="fade-up" data-aos-delay="1300">
+                <h3 class="text-xl font-bold text-white mb-4">想要了解更多家庭光伏管理方案？</h3>
+                <p class="text-blue-100 mb-6">安装智能光伏助手，让您的屋顶光伏系统更智能、更省心</p>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full transform transition hover:scale-105 focus:outline-none">
+                    立即下载
+                </button>
+                <p class="text-gray-300 mt-10">© 2025 智能光伏助手 | 让家庭光伏更简单</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化AOS动画
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out-cubic',
+                once: true
+            });
+            
+            // 添加粒子背景
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('particles-bg').appendChild(renderer.domElement);
+            
+            const particles = new THREE.Group();
+            scene.add(particles);
+            
+            const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.5 });
+            
+            for (let i = 0; i < 200; i++) {
+                const particle = new THREE.Mesh(geometry, material);
+                particle.position.x = (Math.random() - 0.5) * 50;
+                particle.position.y = (Math.random() - 0.5) * 50;
+                particle.position.z = (Math.random() - 0.5) * 50;
+                particle.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.01,
+                    (Math.random() - 0.5) * 0.01,
+                    (Math.random() - 0.5) * 0.01
+                );
+                particles.add(particle);
+            }
+            
+            camera.position.z = 20;
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particles.rotation.x += 0.0005;
+                particles.rotation.y += 0.0005;
+                
+                particles.children.forEach(particle => {
+                    particle.position.add(particle.velocity);
+                    
+                    if (Math.abs(particle.position.x) > 25) particle.velocity.x *= -1;
+                    if (Math.abs(particle.position.y) > 25) particle.velocity.y *= -1;
+                    if (Math.abs(particle.position.z) > 25) particle.velocity.z *= -1;
+                });
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // 删除rotatePhones()函数调用，否则会报错
+            // rotatePhones(); - 这行已删除
+            
+            // 添加数据图表
+            const ctx = document.getElementById('powerChart').getContext('2d');
+            const powerChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['7:00', '9:00', '11:00', '13:00', '15:00', '17:00', '19:00'],
+                    datasets: [{
+                        label: '发电量 (kW)',
+                        data: [0.5, 1.8, 3.2, 3.5, 2.7, 1.3, 0.3],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    },
+                    {
+                        label: '家庭用电量 (kW)',
+                        data: [0.8, 1.2, 1.0, 1.4, 1.6, 2.2, 2.8],
+                        backgroundColor: 'rgba(52, 211, 153, 0.2)',
+                        borderColor: 'rgba(52, 211, 153, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 窗口大小调整时更新渲染器
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // 固定导航点击事件
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    
+                    if (targetSection) {
+                        window.scrollTo({
+                            top: targetSection.offsetTop,
+                            behavior: 'smooth'
+                        });
+                        
+                        document.querySelectorAll('.nav-item').forEach(navItem => {
+                            navItem.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    }
+                });
+            });
+            
+            // 滚动监听更新导航状态
+            window.addEventListener('scroll', function() {
+                const scrollPosition = window.scrollY;
+                
+                document.querySelectorAll('section[id]').forEach(section => {
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionHeight = section.offsetHeight;
+                    const sectionId = section.getAttribute('id');
+                    
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                        document.querySelectorAll('.nav-item').forEach(item => {
+                            item.classList.remove('active');
+                            if (item.getAttribute('data-target') === sectionId) {
+                                item.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
+        // 更新手机上的时间
+        function updatePhoneTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeStr = `${hours}:${minutes}`;
+            
+            document.querySelectorAll('.phone-time').forEach(el => {
+                el.textContent = timeStr;
+            });
+        }
+        
+        setInterval(updatePhoneTime, 1000);
+        updatePhoneTime();
+    </script>
+</body>
+</html>
