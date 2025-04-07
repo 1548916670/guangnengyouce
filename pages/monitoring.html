@@ -1,0 +1,640 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>发电监控 - 智能光伏助手</title>
+        <!-- 先加载数据管理脚本 -->
+        <script src="../js/data-manager.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- 添加 Chart.js 库 -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <!-- 自定义样式 -->
+        <link rel="stylesheet" href="../css/style.css">
+    </head>
+<body class="bg-gray-100 h-full">
+    <div class="p-4 pb-20">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold">发电监控</h1>
+            <div>
+                <button class="p-2">
+                    <i class="fas fa-bell text-gray-600"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- 发电概览卡片 -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-lg font-semibold mb-2">今日发电概览</h2>
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-500">今日发电量</span>
+                <span class="font-bold" id="today-generation">24.5 kWh</span>
+            </div>
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-500">预计收益</span>
+                <span class="font-bold text-green-500" id="today-income">¥18.37</span>
+            </div>
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-500">峰值功率</span>
+                <span class="font-bold" id="peak-power">5.2 kW</span>
+            </div>
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-500">二氧化碳减排</span>
+                <span class="font-bold" id="co2-reduction">18.6 kg</span>
+            </div>
+        </div>
+        
+        <!-- 实时发电功率 -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">实时发电功率</h2>
+                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full" id="power-status">正常发电中</span>
+            </div>
+            
+            <div class="flex justify-center mb-3">
+                <div class="w-40 h-40 rounded-full border-8 border-blue-500 flex items-center justify-center">
+                    <div class="text-center">
+                        <span class="text-3xl font-bold text-blue-600" id="current-power">4.7</span>
+                        <span class="block text-sm text-blue-600">kW</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center text-sm text-gray-500 mb-3">
+                当前发电效率: <span id="power-efficiency">93%</span>
+            </p>
+            
+            <div class="flex justify-between text-xs text-gray-500">
+                <span>最低: <span id="min-power">0.2 kW</span></span>
+                <span id="last-updated">最后更新: 12:30</span>
+                <span>最高: <span id="max-power">5.2 kW</span></span>
+            </div>
+        </div>
+        
+        <!-- 快捷功能区 -->
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <a href="#daily" class="bg-white rounded-lg p-3 flex flex-col items-center shadow power-tab active-tab">
+                <div class="bg-blue-500 rounded-full w-10 h-10 flex items-center justify-center mb-1">
+                    <i class="fas fa-sun text-white"></i>
+                </div>
+                <span class="text-xs">今日</span>
+            </a>
+            <a href="#weekly" class="bg-white rounded-lg p-3 flex flex-col items-center shadow power-tab">
+                <div class="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center mb-1">
+                    <i class="fas fa-calendar-week text-blue-500"></i>
+                </div>
+                <span class="text-xs">本周</span>
+            </a>
+            <a href="#monthly" class="bg-white rounded-lg p-3 flex flex-col items-center shadow power-tab">
+                <div class="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center mb-1">
+                    <i class="fas fa-calendar-alt text-blue-500"></i>
+                </div>
+                <span class="text-xs">本月</span>
+            </a>
+            <a href="#yearly" class="bg-white rounded-lg p-3 flex flex-col items-center shadow power-tab">
+                <div class="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center mb-1">
+                    <i class="fas fa-chart-bar text-blue-500"></i>
+                </div>
+                <span class="text-xs">年度</span>
+            </a>
+        </div>
+        
+     <!-- 发电数据图表区域 -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4" id="chart-container">
+            <h2 class="text-lg font-semibold mb-2">发电数据</h2>
+            <div id="power-chart" class="h-64">
+                <canvas id="powerChartCanvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- 系统状态 -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-lg font-semibold mb-2">系统状态</h2>
+            <div class="flex items-center mb-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                <span>所有设备运行正常</span>
+            </div>
+            <button id="refresh-status" class="text-blue-500 text-sm flex items-center">
+                刷新状态 <i class="fas fa-sync ml-1"></i>
+            </button>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+            <div class="flex justify-around">
+                <a href="home.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="monitoring.html" class="flex flex-col items-center text-blue-500">
+                    <i class="fas fa-chart-line text-lg"></i>
+                    <span class="text-xs">监控</span>
+                </a>
+                <a href="devices.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-solar-panel text-lg"></i>
+                    <span class="text-xs">设备</span>
+                </a>
+                <a href="analytics.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-pie text-lg"></i>
+                    <span class="text-xs">分析</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-cog text-lg"></i>
+                    <span class="text-xs">设置</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局定义图表对象
+        let powerChart = null;
+        
+        // 确保所有链接和按钮可点击
+        document.querySelectorAll('a, button').forEach(element => {
+            element.addEventListener('click', function(e) {
+                if (!this.href && !this.onclick) {
+                    e.preventDefault();
+                    alert('功能开发中...');
+                }
+            });
+        });
+        
+        // 获取时间段名称
+        function getPeriodName(period) {
+            switch(period) {
+                case 'daily': return '今日';
+                case 'weekly': return '本周';
+                case 'monthly': return '本月';
+                case 'yearly': return '年度';
+                default: return '今日';
+            }
+        }
+        
+        // 获取当前季节
+        function getSeason() {
+            const month = new Date().getMonth();
+            if (month >= 2 && month <= 4) return '春季';
+            if (month >= 5 && month <= 7) return '夏季';
+            if (month >= 8 && month <= 10) return '秋季';
+            return '冬季';
+        }
+        
+        // 初始化监控数据
+        function initMonitoringData() {
+            // 从 DataManager 获取数据
+            const generationData = DataManager.getTodayGeneration();
+            const currentPower = DataManager.getCurrentPower();
+            
+            // 更新页面显示
+            updateMonitoringDisplay(generationData, currentPower);
+            
+            // 添加数据更新监听
+            DataManager.addEventListener('dataUpdated', function(data) {
+                // 仅当相关数据更新时刷新UI
+                if (data.type === 'todayGeneration' || data.type === 'realtime') {
+                    const updatedGeneration = DataManager.getTodayGeneration();
+                    const updatedPower = DataManager.getCurrentPower();
+                    updateMonitoringDisplay(updatedGeneration, updatedPower);
+                    
+                    // 找到当前激活的选项卡
+                    const activeTab = document.querySelector('.power-tab.active-tab');
+                    if (activeTab) {
+                        const activePeriod = activeTab.getAttribute('href').replace('#', '');
+                        updateChartByPeriod(activePeriod);
+                    }
+                }
+            });
+            
+            // 也监听localStorage变化 (用于跨页面通信)
+            window.addEventListener('storage', function(e) {
+                if (e.key && e.key.startsWith('pv_data_')) {
+                    const updatedGeneration = DataManager.getTodayGeneration();
+                    const updatedPower = DataManager.getCurrentPower();
+                    updateMonitoringDisplay(updatedGeneration, updatedPower);
+                }
+            });
+        }
+        
+        // 更新监控页面显示
+        function updateMonitoringDisplay(generationData, currentPower) {
+            // 更新发电概览
+            document.getElementById('today-generation').textContent = `${generationData.total} kWh`;
+            document.getElementById('today-income').textContent = `¥${generationData.income}`;
+            document.getElementById('peak-power').textContent = `${generationData.peakPower} kW`;
+            document.getElementById('co2-reduction').textContent = `${generationData.co2Reduction} kg`;
+            
+            // 计算其他显示值
+            const minPower = Math.max(0.1, currentPower * 0.3).toFixed(1);
+            const efficiency = currentPower > 3 ? "93%" : currentPower > 1 ? "85%" : "70%";
+            const lastUpdated = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // 更新实时功率
+            document.getElementById('current-power').textContent = currentPower;
+            document.getElementById('min-power').textContent = `${minPower} kW`;
+            document.getElementById('max-power').textContent = `${generationData.peakPower} kW`;
+            document.getElementById('power-efficiency').textContent = efficiency;
+            document.getElementById('last-updated').textContent = `最后更新: ${lastUpdated}`;
+            
+            // 更新电源状态标签
+            const powerStatus = document.getElementById('power-status');
+            if (currentPower > 3) {
+                powerStatus.textContent = "高效发电中";
+                powerStatus.className = "text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full";
+            } else if (currentPower > 1) {
+                powerStatus.textContent = "正常发电中";
+                powerStatus.className = "text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full";
+            } else if (currentPower > 0.2) {
+                powerStatus.textContent = "低效发电中";
+                powerStatus.className = "text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full";
+            } else {
+                powerStatus.textContent = "微弱发电中";
+                powerStatus.className = "text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full";
+            }
+        }
+        
+        // 刷新按钮处理
+        function setupRefreshButton() {
+            const refreshBtn = document.getElementById('refresh-status');
+            if (refreshBtn) {
+                refreshBtn.onclick = function() {
+                    // 触发数据更新
+                    DataManager.simulateDataUpdate();
+                    
+                    const data = DataManager.getTodayGeneration();
+                    const power = DataManager.getCurrentPower();
+                    
+                    // 更新显示
+                    updateMonitoringDisplay(data, power);
+                    
+                    // 更新当前图表
+                    const activeTab = document.querySelector('.power-tab.active-tab');
+                    if (activeTab) {
+                        const activePeriod = activeTab.getAttribute('href').replace('#', '');
+                        updateChartByPeriod(activePeriod);
+                    }
+                    
+                    // 通知用户
+                    alert(`系统状态已刷新! 当前发电量: ${data.total}kWh, 当前功率: ${power}kW`);
+                };
+            }
+        }
+        
+        // 生成图表数据
+        function generateChartData(period) {
+            let labels = [];
+            let generationData = [];
+            let consumptionData = [];
+            
+            // 从DataManager获取发电数据
+            const todayData = DataManager.getTodayGeneration();
+            const today = new Date();
+            const currentHour = today.getHours();
+            
+            switch(period) {
+                case 'daily':
+                    // 生成今日24小时数据
+                    labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+                    
+                    for (let hour = 0; hour < 24; hour++) {
+                        // 发电数据
+                        if (hour >= 6 && hour < 19) {
+                            // 白天发电曲线 - 钟形曲线
+                            const noonDistance = Math.abs(hour - 12.5);
+                            const noonFactor = Math.max(0, (6.5 - noonDistance) / 6.5);
+                            
+                            // 如果是未来时间，使用预测数据
+                            if (hour > currentHour) {
+                                // 略微降低预测值，增加不确定性
+                                generationData.push((noonFactor * 4 * 0.9).toFixed(1));
+                            } else {
+                                // 历史数据
+                                generationData.push((noonFactor * 4 * (0.9 + Math.random() * 0.2)).toFixed(1));
+                            }
+                        } else {
+                            // 夜间发电几乎为零
+                            generationData.push(0);
+                        }
+                        
+                        // 用电数据 - 双峰曲线(早晚高峰)
+                        const morningPeak = Math.max(0, 1 - Math.abs(hour - 8) / 3);
+                        const eveningPeak = Math.max(0, 1 - Math.abs(hour - 19) / 3);
+                        const basePower = 0.5; // 基础用电
+                        
+                        // 家庭用电两个高峰：早上和晚上
+                        const powerUsage = basePower + morningPeak * 2 + eveningPeak * 3;
+                        
+                        // 如果是未来时间，使用预测数据
+                        if (hour > currentHour) {
+                            consumptionData.push(powerUsage.toFixed(1));
+                        } else {
+                            // 历史数据加入随机波动
+                            consumptionData.push((powerUsage * (0.9 + Math.random() * 0.2)).toFixed(1));
+                        }
+                    }
+                    break;
+                    
+                case 'weekly':
+                    // 生成周数据 - 过去7天
+                    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                    
+                    for (let i = 6; i >= 0; i--) {
+                        const date = new Date(today);
+                        date.setDate(today.getDate() - i);
+                        labels.push(dayNames[date.getDay()]);
+                        
+                        // 模拟每日发电量
+                        // 工作日发电量略高，周末较低(假设更多外出)
+                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                        const weatherFactor = 0.7 + Math.random() * 0.6; // 天气影响因子
+                        let dailyGeneration = isWeekend ? 20 : 24;
+                        
+                        // 今天使用实际数据
+                        if (i === 0) {
+                            dailyGeneration = todayData.total;
+                        } else {
+                            dailyGeneration = dailyGeneration * weatherFactor;
+                        }
+                        
+                        generationData.push(dailyGeneration.toFixed(1));
+                        
+                        // 用电量与发电量相关，但有基础用电
+                        consumptionData.push((dailyGeneration * 0.6 + 5 + Math.random() * 3).toFixed(1));
+                    }
+                    break;
+                    
+                case 'monthly':
+                    // 生成本月数据 - 每几天一个点
+                    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    const currentDay = today.getDate();
+                    
+                    // 确保有足够的点
+                    let dayStep = Math.max(1, Math.floor(currentDay / 6));
+                    if (dayStep > 5) dayStep = 5;
+                    
+                    for (let day = 1; day <= currentDay; day += dayStep) {
+                        labels.push(`${day}日`);
+                        
+                        // 模拟每N天的发电量
+                        const dayInMonthFactor = 0.7 + 0.6 * Math.sin(Math.PI * day / daysInMonth);
+                        const randomFactor = 0.8 + Math.random() * 0.4;
+                        
+                        // 基础发电量 20-30kWh/天
+                        const dailyBase = 20 + 10 * randomFactor;
+                        
+                        // 天数因子
+                        const periodGeneration = (dayStep * dailyBase * dayInMonthFactor).toFixed(1);
+                        generationData.push(periodGeneration);
+                        
+                        // 用电量
+                        consumptionData.push((parseFloat(periodGeneration) * 0.65 + 15).toFixed(1));
+                    }
+                    
+                    // 确保至少有一个点
+                    if (labels.length === 0) {
+                        labels.push(`${currentDay}日`);
+                        generationData.push(todayData.total.toFixed(1));
+                        consumptionData.push((todayData.total * 0.7).toFixed(1));
+                    }
+                    break;
+                    
+                case 'yearly':
+                    // 生成年度数据 - 每月一个点
+                    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    const currentMonth = today.getMonth();
+                    
+                    for (let month = 0; month <= currentMonth; month++) {
+                        labels.push(monthNames[month]);
+                        
+                        // 月发电量与季节相关
+                        let monthGeneration;
+                        
+                        if (month >= 4 && month <= 8) {
+                            // 夏季发电多
+                            monthGeneration = (600 + Math.random() * 150).toFixed(1);
+                        } else if (month >= 11 || month <= 1) {
+                            // 冬季发电少
+                            monthGeneration = (300 + Math.random() * 100).toFixed(1);
+                        } else {
+                            // 春秋季中等
+                            monthGeneration = (450 + Math.random() * 100).toFixed(1);
+                        }
+                        
+                        generationData.push(monthGeneration);
+                        
+                        // 用电量
+                        const useMoreEnergy = month >= 5 && month <= 8 || month === 11 || month === 0;
+                        if (useMoreEnergy) {
+                            // 夏冬用电高
+                            consumptionData.push((parseFloat(monthGeneration) * 0.75 + 100).toFixed(1));
+                        } else {
+                            // 春秋用电低
+                            consumptionData.push((parseFloat(monthGeneration) * 0.6 + 50).toFixed(1));
+                        }
+                    }
+                    
+                    // 确保至少有一个点
+                    if (labels.length === 0) {
+                        const monthName = monthNames[today.getMonth()];
+                        labels.push(monthName);
+                        generationData.push('400.0');
+                        consumptionData.push('320.0');
+                    }
+                    break;
+            }
+            
+            console.log(`生成${period}图表数据，标签数量:${labels.length}`);
+            
+            return {
+                labels: labels,
+                generation: generationData,
+                consumption: consumptionData
+            };
+        }
+        
+        // 根据时间段更新图表
+        function updateChartByPeriod(period) {
+            const chartContainer = document.getElementById('power-chart');
+            
+            try {
+                // 显示加载中
+                chartContainer.innerHTML = '';
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingMessage';
+                loadingDiv.className = 'w-full h-full flex items-center justify-center';
+                loadingDiv.innerHTML = `<p class="text-gray-500">正在加载${getPeriodName(period)}数据...</p>`;
+                chartContainer.appendChild(loadingDiv);
+                
+                // 如果已有图表，先销毁
+                if (powerChart) {
+                    powerChart.destroy();
+                    powerChart = null;
+                }
+                
+                // 生成图表数据
+                const chartData = generateChartData(period);
+                
+                // 检查是否有数据
+                if (!chartData.labels.length) {
+                    throw new Error("没有足够的数据点");
+                }
+                
+                // 延迟一下以显示加载效果
+                setTimeout(() => {
+                    try {
+                        // 移除加载信息
+                        const loadingMessage = document.getElementById('loadingMessage');
+                        if (loadingMessage) {
+                            loadingMessage.remove();
+                        }
+                        
+                        // 创建画布
+                        const canvas = document.createElement('canvas');
+                        canvas.id = 'powerChartCanvas';
+                        chartContainer.appendChild(canvas);
+                        
+                        // 创建图表
+                        const ctx = canvas.getContext('2d');
+                        
+                        // 创建图表
+                        powerChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: chartData.labels,
+                                datasets: [
+                                    {
+                                        label: '发电量 (kWh)',
+                                        data: chartData.generation,
+                                        borderColor: 'rgba(66, 135, 245, 1)',
+                                        backgroundColor: 'rgba(66, 135, 245, 0.1)',
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.4
+                                    },
+                                    {
+                                        label: '用电量 (kWh)',
+                                        data: chartData.consumption,
+                                        borderColor: 'rgba(245, 158, 11, 1)',
+                                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.4
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'kWh'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        
+                        console.log(`${getPeriodName(period)}图表创建成功`);
+                    } catch (error) {
+                        console.error("创建图表时出错:", error);
+                        chartContainer.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center">
+                                <p class="text-red-500">绘制图表时出错: ${error.message}</p>
+                            </div>
+                        `;
+                    }
+                }, 300);
+            } catch (error) {
+                console.error("准备图表数据时出错:", error);
+                chartContainer.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center">
+                        <p class="text-red-500">准备数据时出错: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置时间段选项卡切换
+            document.querySelectorAll('.power-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    try {
+                        // 移除所有选项卡的活跃状态
+                        document.querySelectorAll('.power-tab').forEach(t => {
+                            t.classList.remove('active-tab');
+                            const icon = t.querySelector('div');
+                            const text = t.querySelector('i');
+                            if (icon && text) {
+                                icon.classList.replace('bg-blue-500', 'bg-blue-100');
+                                text.classList.replace('text-white', 'text-blue-500');
+                            }
+                        });
+                        
+                        // 添加当前选项卡的活跃状态
+                        this.classList.add('active-tab');
+                        const icon = this.querySelector('div');
+                        const text = this.querySelector('i');
+                        if (icon && text) {
+                            icon.classList.replace('bg-blue-100', 'bg-blue-500');
+                            text.classList.replace('text-blue-500', 'text-white');
+                        }
+                        
+                        // 获取时间段
+                        const period = this.getAttribute('href').replace('#', '');
+                        
+                        // 更新图表标题
+                        const chartTitle = document.querySelector('#chart-container h2');
+                        if (chartTitle) {
+                            chartTitle.textContent = `发电数据 - ${getPeriodName(period)}`;
+                        }
+                        
+                        // 更新图表数据
+                        updateChartByPeriod(period);
+                        
+                        console.log(`切换到${getPeriodName(period)}图表`);
+                    } catch (error) {
+                        console.error("切换图表时出错:", error);
+                        alert(`切换图表时出错: ${error.message}`);
+                    }
+                });
+            });
+            
+            // 初始化数据显示
+            initMonitoringData();
+            
+            // 设置刷新按钮
+            setupRefreshButton();
+            
+            // 加载初始图表
+            setTimeout(() => {
+                updateChartByPeriod('daily');
+            }, 100);
+            
+            // 每5分钟刷新一次数据
+            setInterval(() => {
+                const data = DataManager.getTodayGeneration();
+                const power = DataManager.getCurrentPower();
+                updateMonitoringDisplay(data, power);
+            }, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>

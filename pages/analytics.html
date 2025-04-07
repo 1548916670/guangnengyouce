@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - 智能光伏助手</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- 先加载数据管理脚本 -->
+    <script src="../js/data-manager.js"></script>
+    <style>
+        /* 解决底部导航栏遮挡内容的问题 */
+        body {
+            padding-bottom: 70px; /* 确保底部有足够空间 */
+            position: relative;
+            min-height: 100%;
+            overflow-y: auto;
+        }
+        
+        /* 确保内容区域可滚动 */
+        .content-container {
+            min-height: calc(100vh - 70px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="content-container p-4">
+        <h1 class="text-xl font-bold mb-4">数据分析</h1>
+        
+        <!-- 分析选项卡 -->
+        <div class="flex mb-4 border-b">
+            <button onclick="changeTab('trends')" class="py-2 px-4 border-b-2 border-blue-500 text-blue-500 font-medium">发电趋势</button>
+            <button onclick="changeTab('income')" class="py-2 px-4 text-gray-600">收益分析</button>
+            <button onclick="changeTab('efficiency')" class="py-2 px-4 text-gray-600">效率对比</button>
+        </div>
+        
+        <!-- 发电趋势内容 -->
+        <div id="trends-content" class="tab-content">
+            <!-- 时间选择 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">月度发电趋势</h2>
+                    <button onclick="changeTimeFrame()" class="text-sm text-blue-500 flex items-center">
+                        2025年3月 <i class="fas fa-chevron-down ml-1"></i>
+                    </button>
+                </div>
+                <div id="power-trend-chart" class="h-48 rounded mb-2">
+                    <!-- 图表将通过JS加载 -->
+                </div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>3月1日</span>
+                    <span>3月15日</span>
+                    <span>3月31日</span>
+                </div>
+            </div>
+            
+            <!-- 发电统计 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">发电统计</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-500 text-sm">本月总发电量</p>
+                        <p class="font-bold text-lg" id="this-month-total">752.6 kWh</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">同比上月</p>
+                        <p class="font-bold text-lg text-green-500" id="month-over-month">+12.4%</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">平均日发电量</p>
+                        <p class="font-bold text-lg" id="avg-daily-generation">24.3 kWh</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">峰值发电量</p>
+                        <p class="font-bold text-lg" id="peak-day-generation">32.7 kWh</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 环境因素 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">环境因素分析</h2>
+                <div id="weather-impact-chart" class="h-48 rounded mb-4">
+                    <!-- 图表将通过JS加载 -->
+                </div>
+                <button onclick="showEnvironmentalFactors()" class="w-full py-2 bg-blue-500 text-white rounded-lg">查看详细分析</button>
+            </div>
+        </div>
+        
+        <!-- 收益分析内容 -->
+        <div id="income-content" class="tab-content hidden">
+            <!-- 收益趋势 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">月度收益趋势</h2>
+                    <button onclick="changeTimeFrame()" class="text-sm text-blue-500 flex items-center">
+                        2025年3月 <i class="fas fa-chevron-down ml-1"></i>
+                    </button>
+                </div>
+                <div id="income-trend-chart" class="h-48 rounded mb-2">
+                    <!-- 图表将通过JS加载 -->
+                </div>
+            </div>
+            
+            <!-- 收益明细 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">收益明细</h2>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-gray-500 text-sm">本月总收益</p>
+                        <p class="font-bold text-lg" id="this-month-income">¥564.45</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">同比上月</p>
+                        <p class="font-bold text-lg text-green-500" id="income-month-over-month">+8.2%</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">平均日收益</p>
+                        <p class="font-bold text-lg" id="avg-daily-income">¥18.21</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">今年累计收益</p>
+                        <p class="font-bold text-lg" id="year-to-date-income">¥1,564.82</p>
+                    </div>
+                </div>
+                
+                <!-- 收益构成 -->
+                <div class="border-t pt-3">
+                    <h3 class="font-medium mb-2">收益构成</h3>
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="text-sm" id="self-consumption">自发自用节省: ¥312.62 (55.4%)</span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span class="text-sm" id="grid-feed-in">余电上网收益: ¥251.83 (44.6%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 效率对比内容 -->
+        <div id="efficiency-content" class="tab-content hidden">
+            <!-- 组件效率 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">组件效率对比</h2>
+                <div id="component-efficiency-chart" class="h-64 rounded mb-2">
+                    <!-- 图表将通过JS加载 -->
+                </div>
+            </div>
+            
+            <!-- 系统效率分析 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">系统效率分析</h2>
+                <div class="mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm">组件效率</span>
+                        <span class="text-sm" id="component-efficiency">92%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 92%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm">逆变器效率</span>
+                        <span class="text-sm" id="inverter-efficiency">96%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 96%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm">系统整体效率</span>
+                        <span class="text-sm" id="system-efficiency">88%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 88%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 改进建议 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-2">改进建议</h2>
+                <div class="p-3 bg-blue-50 rounded-lg mb-2">
+                    <p class="text-sm">组件3和组件5的效率低于平均值，建议进行清洁维护。</p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-lg">
+                    <p class="text-sm">检测到连接线损耗较高，建议检查线路连接状况。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+    <!-- 底部导航栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+        <div class="flex justify-around">
+            <a href="home.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="monitoring.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-chart-line text-lg"></i>
+                <span class="text-xs">监控</span>
+            </a>
+            <a href="devices.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-solar-panel text-lg"></i>
+                <span class="text-xs">设备</span>
+            </a>
+            <a href="analytics.html" class="flex flex-col items-center text-blue-500">
+                <i class="fas fa-chart-pie text-lg"></i>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="settings.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-cog text-lg"></i>
+                <span class="text-xs">设置</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ECharts 图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script>
+        // 全局变量存储图表实例
+        let powerTrendChart = null;
+        let weatherImpactChart = null;
+        let incomeTrendChart = null;
+        let componentEfficiencyChart = null;
+
+        // 切换选项卡
+        function changeTab(tab) {
+            // 重置所有选项卡样式
+            document.querySelectorAll('.flex.mb-4.border-b button').forEach(btn => {
+                btn.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500', 'font-medium');
+                btn.classList.add('text-gray-600');
+            });
+            
+            // 设置选中选项卡样式
+            event.target.classList.remove('text-gray-600');
+            event.target.classList.add('border-b-2', 'border-blue-500', 'text-blue-500', 'font-medium');
+            
+            // 隐藏所有内容区域
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 显示所选的内容区域
+            document.getElementById(`${tab}-content`).classList.remove('hidden');
+            
+            // 初始化或刷新当前选项卡的图表
+            initCharts(tab);
+            
+            // 滚动到顶部
+            window.scrollTo(0, 0);
+        }
+        
+        // 初始化特定选项卡的图表
+        function initCharts(tab) {
+            setTimeout(() => {
+                switch(tab) {
+                    case 'trends':
+                        if (!powerTrendChart) {
+                            powerTrendChart = initPowerTrendChart();
+                        } else {
+                            powerTrendChart.resize();
+                        }
+                        
+                        if (!weatherImpactChart) {
+                            weatherImpactChart = initWeatherImpactChart();
+                        } else {
+                            weatherImpactChart.resize();
+                        }
+                        break;
+                        
+                    case 'income':
+                        if (!incomeTrendChart) {
+                            incomeTrendChart = initIncomeTrendChart();
+                        } else {
+                            incomeTrendChart.resize();
+                        }
+                        break;
+                        
+                    case 'efficiency':
+                        if (!componentEfficiencyChart) {
+                            componentEfficiencyChart = initComponentEfficiencyChart();
+                        } else {
+                            componentEfficiencyChart.resize();
+                        }
+                        break;
+                }
+            }, 100); // 短暂延迟确保DOM已更新
+        }
+        
+        // 发电趋势图表
+        function initPowerTrendChart() {
+            const chart = echarts.init(document.getElementById('power-trend-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['实际发电量', '预期发电量'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['3/1', '3/5', '3/10', '3/15', '3/20', '3/25', '3/30']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'kWh'
+                },
+                series: [
+                    {
+                        name: '实际发电量',
+                        type: 'line',
+                        data: [25.3, 23.7, 26.1, 22.8, 28.5, 27.2, 24.9],
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: {
+                            width: 3,
+                            color: '#3b82f6'
+                        },
+                        itemStyle: {
+                            color: '#3b82f6'
+                        }
+                    },
+                    {
+                        name: '预期发电量',
+                        type: 'line',
+                        data: [24.5, 24.8, 25.0, 24.2, 25.5, 25.7, 24.8],
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 2,
+                            type: 'dashed',
+                            color: '#93c5fd'
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            return chart;
+        }
+
+        // 天气影响图表
+        function initWeatherImpactChart() {
+            const chart = echarts.init(document.getElementById('weather-impact-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['实际效率', '理论效率'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['晴天', '多云', '阴天', '小雨', '大雨']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '效率(%)',
+                    max: 100
+                },
+                series: [
+                    {
+                        name: '实际效率',
+                        type: 'bar',
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        data: [92, 80, 65, 40, 25]
+                    },
+                    {
+                        name: '理论效率',
+                        type: 'bar',
+                        itemStyle: {
+                            color: '#93c5fd'
+                        },
+                        data: [95, 85, 70, 45, 30]
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            return chart;
+        }
+
+        // 收益趋势图表
+        function initIncomeTrendChart() {
+            const chart = echarts.init(document.getElementById('income-trend-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['自发自用节省', '余电上网收益'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['3/1', '3/5', '3/10', '3/15', '3/20', '3/25', '3/30']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '¥'
+                },
+                series: [
+                    {
+                        name: '自发自用节省',
+                        type: 'bar',
+                        stack: '总量',
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        data: [12.1, 10.8, 11.5, 9.7, 13.2, 12.4, 11.3]
+                    },
+                    {
+                        name: '余电上网收益',
+                        type: 'bar',
+                        stack: '总量',
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        itemStyle: {
+                            color: '#10b981'
+                        },
+                        data: [7.5, 8.2, 9.0, 7.8, 10.5, 9.2, 8.4]
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            return chart;
+        }
+
+        // 组件效率对比图表
+        function initComponentEfficiencyChart() {
+            const chart = echarts.init(document.getElementById('component-efficiency-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['当前效率', '出厂效率'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['组件1', '组件2', '组件3', '组件4', '组件5', '组件6']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '效率(%)',
+                    min: 70,
+                    max: 100
+                },
+                series: [
+                    {
+                        name: '当前效率',
+                        type: 'bar',
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        data: [88, 92, 85, 90, 86, 91]
+                    },
+                    {
+                        name: '出厂效率',
+                        type: 'bar',
+                        itemStyle: {
+                            color: '#93c5fd'
+                        },
+                        data: [92, 94, 90, 92, 90, 94]
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            return chart;
+        }
+        
+        // 更改时间范围
+        function changeTimeFrame() {
+            alert('时间选择功能开发中...');
+        }
+        
+        // 显示环境因素分析
+        function showEnvironmentalFactors() {
+            alert('环境因素详细分析页面开发中...');
+        }
+        
+        // 确保所有链接和按钮可点击
+        document.querySelectorAll('a, button').forEach(element => {
+            element.addEventListener('click', function(e) {
+                if (!this.href && !this.onclick && !this.getAttribute('onclick')) {
+                    e.preventDefault();
+                    alert('功能开发中...');
+                }
+            });
+        });
+        
+        // 窗口大小调整时重新渲染图表
+        window.addEventListener('resize', function() {
+            if (powerTrendChart) powerTrendChart.resize();
+            if (weatherImpactChart) weatherImpactChart.resize();
+            if (incomeTrendChart) incomeTrendChart.resize();
+            if (componentEfficiencyChart) componentEfficiencyChart.resize();
+        });
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取数据
+            try {
+                const todayGeneration = DataManager.getTodayGeneration();
+                const yesterdayGeneration = DataManager.getYesterdayGeneration();
+                const thisMonthGeneration = DataManager.getMonthGeneration();
+                const lastMonthGeneration = DataManager.getLastMonthGeneration();
+                
+                // 更新发电统计显示
+                if (todayGeneration && thisMonthGeneration && lastMonthGeneration) {
+                    const currentDay = new Date().getDate();
+                    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+                    
+                    // 计算月度环比增长
+                    const monthOverMonth = thisMonthGeneration.total > 0 && lastMonthGeneration.total > 0 ? 
+                        (thisMonthGeneration.total / lastMonthGeneration.total * 100 - 100).toFixed(1) : 0;
+                    
+                    // 平均日发电量
+                    const avgDaily = (thisMonthGeneration.total / currentDay).toFixed(1);
+                    
+                    // 更新UI
+                    document.getElementById('this-month-total').textContent = `${thisMonthGeneration.total.toFixed(1)} kWh`;
+                    document.getElementById('month-over-month').textContent = 
+                        monthOverMonth >= 0 ? `+${monthOverMonth}%` : `${monthOverMonth}%`;
+                    document.getElementById('month-over-month').className = 
+                        monthOverMonth >= 0 ? 'font-bold text-lg text-green-500' : 'font-bold text-lg text-red-500';
+                    document.getElementById('avg-daily-generation').textContent = `${avgDaily} kWh`;
+                }
+                
+                // 初始化第一个选项卡的图表
+                initCharts('trends');
+                
+            } catch (error) {
+                console.error("初始化数据时出错:", error);
+            }
+            
+            // 确保页面可以滚动到底部
+            document.documentElement.style.overflowY = 'auto';
+            document.body.style.overflowY = 'auto';
+            
+            // 监听数据更新
+            DataManager.addEventListener('dataUpdated', function(data) {
+                if (data.type === 'todayGeneration' || data.type === 'monthGeneration') {
+                    // 刷新当前图表
+                    const activeTab = document.querySelector('.flex.mb-4.border-b button.border-blue-500');
+                    if (activeTab) {
+                        const tab = activeTab.textContent.trim();
+                        if (tab === '发电趋势') {
+                            initCharts('trends');
+                        } else if (tab === '收益分析') {
+                            initCharts('income');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

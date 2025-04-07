@@ -1,0 +1,1140 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 智能光伏助手</title>
+    <!-- 先加载数据管理脚本 -->
+    <script src="../js/data-manager.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+    
+    <!-- 页面布局优化样式 -->
+    <style>
+        /* 内容容器限制 */
+        .content-container {
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 70px; /* 为底部导航留出空间 */
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+        
+        /* 中等屏幕大小限制最大宽度 */
+        @media (min-width: 768px) {
+            .content-container {
+                max-width: 768px;
+            }
+        }
+        
+        /* 优化滚动条 */
+        .scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            padding-bottom: 4px; /* 为滚动条留出空间 */
+        }
+        
+        /* 使数据卡片在小屏幕上保持合适尺寸 */
+        .data-card {
+            min-width: 130px;
+            max-width: 160px;
+        }
+        
+        /* 修复底部空间 */
+        body {
+            padding-bottom: 70px;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-full">
+    <div class="content-container">
+        <!-- 顶部栏 -->
+        <div class="flex justify-between items-center mb-6 pt-4">
+            <div>
+                <h1 class="text-xl font-bold">您好，<span id="user-name">张三</span></h1>
+                <p class="text-sm text-gray-500">今天是个阳光明媚的日子</p>
+            </div>
+            <!-- 修改顶部栏中的头像部分 -->
+            <div class="flex items-center">
+                <button class="mr-2 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow">
+                    <i class="fas fa-bell text-gray-600"></i>
+                </button>
+                <button id="avatar-btn" class="w-10 h-10 rounded-full overflow-hidden bg-gray-200" onclick="openAvatarSelector()">
+                    <img id="user-avatar" src="../images/avatar.png" alt="用户头像" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40';this.onerror='';">
+                </button>
+            </div>
+        </div>
+        
+        <!-- 添加头像选择弹窗 -->
+        <div id="avatar-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg p-4 w-80 max-w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium">更换头像</h3>
+                    <button onclick="closeAvatarSelector()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-sm text-gray-500 mb-2">选择以下头像</p>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer" onclick="selectAvatar('../images/avatar-1.png')">
+                            <img src="../images/avatar-1.png" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64/4F46E5?text=A1'">
+                        </div>
+                        <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer" onclick="selectAvatar('../images/avatar-2.png')">
+                            <img src="../images/avatar-2.png" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64/06B6D4?text=A2'">
+                        </div>
+                        <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer" onclick="selectAvatar('../images/avatar-3.png')">
+                            <img src="../images/avatar-3.png" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64/EC4899?text=A3'">
+                        </div>
+                        <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer" onclick="selectAvatar('../images/avatar-4.png')">
+                            <img src="../images/avatar-4.png" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64/F59E0B?text=A4'">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-sm text-gray-500 mb-2">或上传自定义头像</p>
+                    <label for="avatar-upload" class="block w-full py-2 px-3 text-center bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100">
+                        <i class="fas fa-upload mr-1"></i> 从设备中选择
+                    </label>
+                    <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
+                </div>
+                
+                <div class="flex justify-end mt-2">
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg mr-2" onclick="closeAvatarSelector()">取消</button>
+                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg" onclick="saveAvatar()">保存</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 今日发电概览 -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl text-white p-5 mb-5">
+            <div class="mb-4">
+                <h2 class="text-sm opacity-90">今日发电量</h2>
+                <div class="flex items-end">
+                    <span class="text-3xl font-bold">26.9</span>
+                    <span class="ml-1 text-sm opacity-90">kWh</span>
+                </div>
+                <div class="mt-1 text-xs">
+                    <span class="opacity-90">同比昨日</span>
+                    <span class="ml-1 font-medium">+4.3%</span>
+                </div>
+            </div>
+            
+            <div class="flex justify-between text-xs opacity-90">
+                <div>
+                    <p>峰值功率</p>
+                    <p class="font-medium text-sm mt-1">5.2 kW</p>
+                </div>
+                <div>
+                    <p>二氧化碳减排</p>
+                    <p class="font-medium text-sm mt-1">18.6 kg</p>
+                </div>
+                <div>
+                    <p>收益估算</p>
+                    <p class="font-medium text-sm mt-1">¥16.14</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用电建议 -->
+        <div class="bg-white rounded-xl p-4 mb-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-semibold">今日用电建议</h2>
+                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">当前为发电高峰</span>
+            </div>
+            
+            <!-- 电价与发电情况 -->
+            <div class="scroll-container mb-3">
+                <div class="flex py-1">
+                    <div class="flex-shrink-0 mr-3">
+                        <div class="data-card h-24 bg-gray-50 rounded-lg p-2">
+                            <p class="text-sm font-medium mb-1">当前电价</p>
+                            <div class="flex items-baseline">
+                                <span class="text-2xl font-bold text-blue-600">0.48</span>
+                                <span class="text-sm ml-1 text-blue-600">元/kWh</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">11:00-16:00 峰时段</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-shrink-0 mr-3">
+                        <div class="data-card h-24 bg-gray-50 rounded-lg p-2">
+                            <p class="text-sm font-medium mb-1">当前发电</p>
+                            <div class="flex items-baseline">
+                                <span class="text-2xl font-bold text-green-600">4.7</span>
+                                <span class="text-sm ml-1 text-green-600">kW</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">实时数据</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-shrink-0">
+                        <div class="data-card h-24 bg-gray-50 rounded-lg p-2">
+                            <p class="text-sm font-medium mb-1">当前用电</p>
+                            <div class="flex items-baseline">
+                                <span class="text-2xl font-bold text-orange-600">3.2</span>
+                                <span class="text-sm ml-1 text-orange-600">kW</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">剩余可用: 1.5 kW</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 用电建议摘要 -->
+            <div class="p-3 bg-blue-50 rounded-lg mb-3 relative">
+                <div class="absolute top-1 right-1">
+                    <span class="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded">AI</span>
+                </div>
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-lightbulb mr-1"></i>
+                    <span id="power-suggestion">根据您的用电数据有如下建议</span>
+                </p>
+            </div>
+            
+            <!-- 电器使用建议 -->
+            <p class="text-sm font-medium mb-2">推荐此时段使用以下电器</p>
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                            <i class="fas fa-tshirt text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">洗衣机</h3>
+                            <p class="text-xs text-gray-500">800W</p>
+                        </div>
+                    </div>
+                    <button id="btn-washing-machine" class="appliance-btn text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg" onclick="controlAppliance('washing-machine', true)">
+                        立即开启
+                    </button>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                            <i class="fas fa-charging-station text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">电动车充电</h3>
+                            <p class="text-xs text-gray-500">1500W</p>
+                        </div>
+                    </div>
+                    <button id="btn-ev-charging" class="appliance-btn text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg" onclick="controlAppliance('ev-charging', true)">
+                        立即开启
+                    </button>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                            <i class="fas fa-snowflake text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">空调</h3>
+                            <p class="text-xs text-gray-500">1200W</p>
+                        </div>
+                    </div>
+                    <button id="btn-ac" class="appliance-btn text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg" onclick="controlAppliance('ac', true)">
+                        立即开启
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 延后使用建议 -->
+            <div class="mt-3 pt-3 border-t">
+                <p class="text-sm font-medium mb-2">建议延后使用</p>
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2">
+                                <i class="fas fa-utensils text-gray-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium">电饭煲</h3>
+                                <p class="text-xs text-gray-500">1000W</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">建议 18:00 后使用</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2">
+                                <i class="fas fa-hot-tub text-gray-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium">热水器</h3>
+                                <p class="text-xs text-gray-500">2000W</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">建议 20:00 后使用</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 完整用电规划链接 -->
+            <div class="mt-3">
+                <a href="power-schedule.html" class="flex items-center justify-center w-full py-2 text-sm text-blue-600">
+                    <span>查看完整用电规划</span>
+                    <i class="fas fa-chevron-right text-xs ml-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 家电用电情况 -->
+        <div class="mb-5">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">家电用电情况</h2>
+                <a href="devices.html#appliances" class="text-sm text-blue-600">查看全部</a>
+            </div>
+            
+            <!-- 家电用电情况内容 -->
+            <div class="bg-white rounded-xl p-4 shadow-sm">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                                <i class="fas fa-tv text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium">电视</h3>
+                                <p class="text-xs text-gray-500">已使用 2.1 小时</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium">0.32 kWh</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                                <i class="fas fa-snowflake text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium">空调</h3>
+                                <p class="text-xs text-gray-500">已使用 3.5 小时</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium">4.2 kWh</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                                <i class="fas fa-bolt text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium">其他设备</h3>
+                                <p class="text-xs text-gray-500">冰箱、路由器等</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium">5.8 kWh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+        <div class="flex justify-around">
+            <a href="home.html" class="flex flex-col items-center text-blue-500">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="monitoring.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-chart-line text-lg"></i>
+                <span class="text-xs">监控</span>
+            </a>
+            <a href="devices.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-plug text-lg"></i>
+                <span class="text-xs">设备</span>
+            </a>
+            <a href="analytics.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-chart-bar text-lg"></i>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="settings.html" class="flex flex-col items-center text-gray-500">
+                <i class="fas fa-cog text-lg"></i>
+                <span class="text-xs">设置</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 控制家电的功能
+        function controlAppliance(applianceId, turnOn) {
+            // 获取对应的按钮元素
+            const btnElement = document.getElementById(`btn-${applianceId}`);
+            
+            // 这里是模拟控制家电的代码
+            if (turnOn) {
+                alert(`已发送指令: 开启${getApplianceName(applianceId)}`);
+                // 更新本地存储以便家电管理页面可以读取状态
+                localStorage.setItem(`appliance_${applianceId}`, 'on');
+                
+                // 更新按钮文本和样式
+                if (btnElement) {
+                    btnElement.textContent = '已开启';
+                    btnElement.classList.remove('bg-blue-500');
+                    btnElement.classList.add('bg-green-500');
+                    // 更改点击事件为关闭
+                    btnElement.onclick = function() { controlAppliance(applianceId, false); };
+                }
+            } else {
+                alert(`已发送指令: 关闭${getApplianceName(applianceId)}`);
+                // 更新本地存储以便家电管理页面可以读取状态
+                localStorage.setItem(`appliance_${applianceId}`, 'off');
+                
+                // 更新按钮文本和样式
+                if (btnElement) {
+                    btnElement.textContent = '立即开启';
+                    btnElement.classList.remove('bg-green-500');
+                    btnElement.classList.add('bg-blue-500');
+                    // 更改点击事件为开启
+                    btnElement.onclick = function() { controlAppliance(applianceId, true); };
+                }
+            }
+            
+            // 如果已经打开了家电管理页面，可以通过事件进行通信
+            const event = new CustomEvent('applianceStatusChanged', { 
+                detail: { id: applianceId, status: turnOn ? 'on' : 'off' } 
+            });
+            window.dispatchEvent(event);
+            
+            // 实际应用中，这里应该发送请求到服务器控制智能家电
+        }
+        
+        // 获取家电名称
+        function getApplianceName(applianceId) {
+            const applianceNames = {
+                'washing-machine': '洗衣机',
+                'ev-charging': '电动车充电',
+                'ac': '空调',
+                'rice-cooker': '电饭煲',
+                'water-heater': '热水器',
+                'tv': '电视',
+                'fridge': '冰箱',
+                'microwave': '微波炉',
+                'dishwasher': '洗碗机'
+            };
+            return applianceNames[applianceId] || '未知设备';
+        }
+        
+        // 更新用电建议 - 使用DeepSeek AI提供更智能的建议
+        async function updatePowerSuggestion() {
+            // 模拟获取实时数据
+            const currentHour = new Date().getHours();
+            const currentDate = new Date();
+            const dayOfWeek = currentDate.getDay(); // 0是周日，1-6是周一到周六
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const season = getSeason(currentDate);
+            
+            // 模拟天气数据 - 实际应用中可以通过API获取
+            const weather = getSimulatedWeather();
+            
+            // 模拟发电数据
+            const powerGeneration = getSimulatedPowerGeneration(currentHour, weather.condition);
+            const powerConsumption = getSimulatedPowerConsumption(currentHour, isWeekend, season);
+            const powerBalance = powerGeneration - powerConsumption;
+            
+            // 更新发电和用电数据显示
+            updatePowerDisplay(powerGeneration, powerConsumption);
+            
+            // 准备发送给DeepSeek的数据
+            const data = {
+                generation: powerGeneration,
+                totalGeneration: DataManager.getTodayGeneration().total,
+                peakPower: DataManager.getTodayGeneration().peakPower,
+                consumption: powerConsumption,
+                time: new Date().toLocaleTimeString(),
+                weather: weather,
+                season: season,
+                isWeekend: isWeekend,
+                electricityPrice: getCurrentElectricityPrice(currentHour, isWeekend).price,
+                priceLevel: getCurrentElectricityPrice(currentHour, isWeekend).level
+            };
+            
+            try {
+                // 显示加载状态
+                const suggestionElement = document.getElementById('power-suggestion');
+                if (suggestionElement) {
+                    suggestionElement.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 正在生成智能建议...';
+                }
+                
+                // 调用DeepSeek服务获取智能建议
+                const applianceSuggestions = await deepseekService.getSmartPowerSuggestions(data);
+                
+                // 更新建议文本
+                if (suggestionElement) {
+                    suggestionElement.innerHTML = `<i class="fas fa-lightbulb mr-1"></i> ${applianceSuggestions.mainSuggestion}`;
+                    
+                    // 如果有推理说明，添加查看详情按钮
+                    if (applianceSuggestions.reasoning) {
+                        const reasoningBtn = document.createElement('span');
+                        reasoningBtn.className = 'ml-1 cursor-pointer text-xs underline';
+                        reasoningBtn.textContent = '查看详情';
+                        reasoningBtn.onclick = function() {
+                            alert(`智能助手分析:\n${applianceSuggestions.reasoning}`);
+                        };
+                        suggestionElement.appendChild(reasoningBtn);
+                    }
+                }
+                
+                // 更新推荐使用的家电列表
+                updateRecommendedAppliances(applianceSuggestions.recommended);
+                
+                // 更新建议延后使用的家电列表
+                updateDelayedAppliances(applianceSuggestions.delayed);
+                
+            } catch (error) {
+                console.error("获取智能建议时出错:", error);
+                
+                // 出错时使用本地方法生成建议
+                const fallbackSuggestions = getApplianceSuggestions(currentHour, weather, powerBalance, season, isWeekend);
+                
+                // 更新建议文本
+                const suggestionElement = document.getElementById('power-suggestion');
+                if (suggestionElement) {
+                    suggestionElement.innerHTML = `<i class="fas fa-lightbulb mr-1"></i> ${fallbackSuggestions.mainSuggestion}`;
+                }
+                
+                // 更新推荐使用的家电列表
+                updateRecommendedAppliances(fallbackSuggestions.recommended);
+                
+                // 更新建议延后使用的家电列表
+                updateDelayedAppliances(fallbackSuggestions.delayed);
+            }
+            
+            // 更新峰谷电价信息
+            updateElectricityPrice(currentHour, isWeekend);
+        }
+        
+        // 获取当前电价和级别
+        function getCurrentElectricityPrice(hour, isWeekend) {
+            let price;
+            let level;
+            
+            if (isWeekend) {
+                // 周末统一电价
+                price = 0.38;
+                level = "平时段";
+            } else {
+                // 工作日分时电价
+                if (hour >= 9 && hour < 17) {
+                    price = 0.48;
+                    level = "峰时段";
+                } else if (hour >= 17 && hour < 21) {
+                    price = 0.56;
+                    level = "高峰时段";
+                } else if (hour >= 21 || hour < 6) {
+                    price = 0.26;
+                    level = "低谷时段";
+                } else {
+                    price = 0.38;
+                    level = "平时段";
+                }
+            }
+            
+            return { price, level };
+        }
+        
+        // 获取当前季节
+        function getSeason(date) {
+            const month = date.getMonth(); // 0-11
+            if (month >= 2 && month <= 4) return 'spring'; // 3-5月为春
+            if (month >= 5 && month <= 7) return 'summer'; // 6-8月为夏
+            if (month >= 8 && month <= 10) return 'autumn'; // 9-11月为秋
+            return 'winter'; // 12-2月为冬
+        }
+        
+        // 模拟天气数据
+        function getSimulatedWeather() {
+            // 在实际应用中，这应该是从气象API获取的数据
+            const conditions = ['sunny', 'cloudy', 'overcast', 'rainy', 'foggy'];
+            const randomIndex = Math.floor(Math.random() * conditions.length);
+            const condition = conditions[randomIndex];
+            
+            let temperature;
+            // 根据当前月份模拟更合理的温度
+            const month = new Date().getMonth();
+            if (month >= 5 && month <= 8) { // 夏季
+                temperature = 25 + Math.random() * 10;
+            } else if (month >= 11 || month <= 1) { // 冬季
+                temperature = -5 + Math.random() * 15;
+            } else { // 春秋
+                temperature = 10 + Math.random() * 15;
+            }
+            
+            return {
+                condition: condition,
+                temperature: Math.round(temperature),
+                humidity: Math.round(40 + Math.random() * 40)
+            };
+        }
+        
+        // 模拟发电量
+        function getSimulatedPowerGeneration(hour, weatherCondition) {
+            // 基础发电量
+            let basePower = 0;
+            
+            // 白天时段 (7-18点)
+            if (hour >= 7 && hour < 18) {
+                // 中午前后发电量最高
+                const distFromNoon = Math.abs(12.5 - hour);
+                const noonFactor = Math.max(0, (5.5 - distFromNoon) / 5.5);
+                basePower = 3 + noonFactor * 2;
+                
+                // 根据天气情况调整
+                switch(weatherCondition) {
+                    case 'sunny':
+                        basePower *= 1.0; // 晴天 100% 效率
+                        break;
+                    case 'cloudy':
+                        basePower *= 0.7; // 多云 70% 效率
+                        break;
+                    case 'overcast':
+                        basePower *= 0.4; // 阴天 40% 效率
+                        break;
+                    case 'rainy':
+                        basePower *= 0.2; // 雨天 20% 效率
+                        break;
+                    case 'foggy':
+                        basePower *= 0.3; // 雾天 30% 效率
+                        break;
+                }
+            } else {
+                // 夜间发电微量或为零
+                basePower = Math.random() * 0.1;
+            }
+            
+            // 添加一些随机波动 (±10%)
+            const randomFactor = 0.9 + Math.random() * 0.2;
+            return parseFloat((basePower * randomFactor).toFixed(1));
+        }
+        
+        // 模拟用电量
+        function getSimulatedPowerConsumption(hour, isWeekend, season) {
+            let basePower = 1; // 基础负载 1kW
+            
+            // 根据时间段调整
+            if (hour >= 7 && hour < 9) { // 早晨起床时间
+                basePower += 1.5;
+            } else if (hour >= 11 && hour < 14) { // 中午做饭时间
+                basePower += 1;
+            } else if (hour >= 17 && hour < 21) { // 晚上回家时间
+                basePower += 2;
+            } else if (hour >= 22 || hour < 6) { // 深夜
+                basePower += 0.3;
+            }
+            
+            // 工作日和周末的差异
+            if (isWeekend) {
+                basePower += 0.5; // 周末家里人更多，用电增加
+            }
+            
+            // 季节差异
+            switch(season) {
+                case 'summer':
+                    basePower += 1.2; // 夏季空调用电
+                    break;
+                case 'winter':
+                    basePower += 1.0; // 冬季取暖用电
+                    break;
+            }
+            
+            // 添加随机波动 (±20%)
+            const randomFactor = 0.8 + Math.random() * 0.4;
+            return parseFloat((basePower * randomFactor).toFixed(1));
+        }
+        
+        // 更新电力显示
+        function updatePowerDisplay(generation, consumption) {
+            // 更新发电和用电数据显示
+            const generationElement = document.querySelector('.text-green-600');
+            if (generationElement) {
+                generationElement.textContent = generation;
+                // 保存到DataManager
+                DataManager.setCurrentPower(generation);
+            }
+            
+            // 更新用电数据显示
+            const consumptionElement = document.querySelector('.text-orange-600');
+            if (consumptionElement) {
+                consumptionElement.textContent = consumption;
+                // 保存到DataManager
+                DataManager.setCurrentConsumption(consumption);
+            }
+            
+            // 计算并更新剩余可用电力
+            const availablePower = parseFloat((generation - consumption).toFixed(1));
+            const availableElement = document.querySelector('.text-gray-500 + .text-xs');
+            if (availableElement) {
+                availableElement.textContent = `剩余可用: ${Math.max(0, availablePower)} kW`;
+            }
+            
+            // 更新峰时标签
+            const peakLabel = document.querySelector('.bg-green-100');
+            if (peakLabel) {
+                if (generation > consumption * 1.2) {
+                    peakLabel.textContent = "当前为发电高峰";
+                    peakLabel.classList.replace('bg-yellow-100', 'bg-green-100');
+                    peakLabel.classList.replace('text-yellow-800', 'text-green-800');
+                } else if (consumption > generation * 1.2) {
+                    peakLabel.textContent = "当前为用电高峰";
+                    peakLabel.classList.replace('bg-green-100', 'bg-yellow-100');
+                    peakLabel.classList.replace('text-green-800', 'text-yellow-800');
+                } else {
+                    peakLabel.textContent = "供需平衡";
+                    peakLabel.classList.replace('bg-green-100', 'bg-blue-100');
+                    peakLabel.classList.replace('bg-yellow-100', 'bg-blue-100');
+                    peakLabel.classList.replace('text-green-800', 'text-blue-800');
+                    peakLabel.classList.replace('text-yellow-800', 'text-blue-800');
+                }
+            }
+        }
+        
+        // 获取家电使用建议
+        function getApplianceSuggestions(hour, weather, powerBalance, season, isWeekend) {
+            let mainSuggestion = "";
+            let recommended = [];
+            let delayed = [];
+            
+            // 根据发电和用电平衡状态提供不同建议
+            if (powerBalance > 1.5) {
+                // 发电富余，建议使用大功率电器
+                mainSuggestion = "当前光伏发电充足，建议使用大功率电器，充分利用自产电力！";
+                
+                // 推荐使用的电器列表
+                recommended = ['washing-machine', 'ev-charging', 'ac'];
+                
+                // 没有需要延后的电器
+                delayed = [];
+            } else if (powerBalance >= 0) {
+                // 发电平衡
+                mainSuggestion = "当前光伏发电与用电基本平衡，可以适量使用家用电器。";
+                
+                // 根据季节和天气推荐
+                if (season === 'summer' && weather.temperature > 28) {
+                    recommended = ['ac']; // 夏季高温推荐使用空调
+                    delayed = ['washing-machine', 'ev-charging']; // 延后耗电量大的设备
+                } else if (season === 'winter' && weather.temperature < 5) {
+                    recommended = ['ac']; // 冬季低温推荐使用空调制热
+                    delayed = ['washing-machine', 'ev-charging'];
+                } else {
+                    recommended = ['washing-machine']; // 普通天气推荐洗衣
+                    delayed = ['ev-charging', 'ac']; 
+                }
+            } else {
+                // 用电大于发电
+                mainSuggestion = "当前用电量大于光伏发电量，建议减少使用大功率电器或等待阳光充足时使用。";
+                
+                // 只推荐必要的小功率电器
+                recommended = [];
+                
+                // 建议延后大功率电器使用
+                delayed = ['washing-machine', 'ev-charging', 'ac', 'rice-cooker', 'water-heater'];
+                
+                // 根据时间调整
+                if (hour >= 18 && hour < 21) {
+                    // 晚餐时间可能需要做饭
+                    delayed = delayed.filter(item => item !== 'rice-cooker');
+                    recommended.push('rice-cooker');
+                }
+            }
+            
+            // 基于天气的特殊建议
+            if (weather.condition === 'sunny' && weather.temperature > 25) {
+                // 晴热天气优先使用空调
+                if (!recommended.includes('ac')) {
+                    recommended.push('ac');
+                }
+                delayed = delayed.filter(item => item !== 'ac');
+            }
+            
+            // 根据时间对推荐进行调整
+            if (hour >= 7 && hour < 9 && isWeekend) {
+                // 周末早晨可能会洗衣服
+                if (!recommended.includes('washing-machine')) {
+                    recommended.push('washing-machine');
+                }
+                delayed = delayed.filter(item => item !== 'washing-machine');
+            }
+            
+            return {
+                mainSuggestion,
+                recommended,
+                delayed
+            };
+        }
+        
+        // 更新推荐使用的家电列表
+        function updateRecommendedAppliances(recommendedAppliances) {
+            // 这里应该动态更新页面上的推荐电器列表
+            // 为简化起见，我们假设页面上已经有固定的三个电器，只更新它们的可见性
+            
+            // 所有可能的推荐电器
+            const allAppliances = ['washing-machine', 'ev-charging', 'ac', 'rice-cooker', 'water-heater'];
+            
+            // 首先隐藏所有的推荐区域
+            const recommendSection = document.querySelector('.space-y-2\\.5');
+            if (recommendSection) {
+                // 如果没有任何推荐，显示一条消息
+                if (recommendedAppliances.length === 0) {
+                    recommendSection.innerHTML = '<p class="text-center text-sm text-gray-500 py-2">当前没有推荐使用的电器</p>';
+                    return;
+                }
+                
+                // 清除现有内容
+                recommendSection.innerHTML = '';
+                
+                // 为每个推荐的电器创建一个条目
+                recommendedAppliances.forEach(applianceId => {
+                    const applianceInfo = getApplianceInfo(applianceId);
+                    if (applianceInfo) {
+                        // 创建DOM元素
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between';
+                        div.innerHTML = `
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                                    <i class="fas ${applianceInfo.icon} text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium">${applianceInfo.name}</h3>
+                                    <p class="text-xs text-gray-500">${applianceInfo.power}</p>
+                                </div>
+                            </div>
+                            <button id="btn-${applianceId}" class="appliance-btn text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg" onclick="controlAppliance('${applianceId}', true)">
+                                立即开启
+                            </button>
+                        `;
+                        recommendSection.appendChild(div);
+                        
+                        // 初始化按钮状态
+                        const status = localStorage.getItem(`appliance_${applianceId}`) || 'off';
+                        updateApplianceButtonUI(applianceId, status);
+                    }
+                });
+            }
+        }
+        
+        // 更新建议延后使用的家电列表
+        function updateDelayedAppliances(delayedAppliances) {
+            const delaySection = document.querySelector('.mt-3.pt-3.border-t .space-y-2\\.5');
+            
+            if (delaySection) {
+                // 如果没有需要延后的电器，显示一条消息
+                if (delayedAppliances.length === 0) {
+                    delaySection.innerHTML = '<p class="text-center text-sm text-gray-500 py-2">当前没有需要延后使用的电器</p>';
+                    return;
+                }
+                
+                // 清除现有内容
+                delaySection.innerHTML = '';
+                
+                // 为每个需要延后的电器创建一个条目
+                delayedAppliances.forEach(applianceId => {
+                    const applianceInfo = getApplianceInfo(applianceId);
+                    const bestTimeInfo = getBestTimeForAppliance(applianceId);
+                    
+                    if (applianceInfo) {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between';
+                        div.innerHTML = `
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2">
+                                    <i class="fas ${applianceInfo.icon} text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium">${applianceInfo.name}</h3>
+                                    <p class="text-xs text-gray-500">${applianceInfo.power}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-gray-500">建议 ${bestTimeInfo} 使用</span>
+                        `;
+                        delaySection.appendChild(div);
+                    }
+                });
+            }
+        }
+        
+        // 获取家电信息
+        function getApplianceInfo(applianceId) {
+            const applianceInfo = {
+                'washing-machine': {
+                    name: '洗衣机',
+                    power: '800W',
+                    icon: 'fa-tshirt'
+                },
+                'ev-charging': {
+                    name: '电动车充电',
+                    power: '1500W',
+                    icon: 'fa-charging-station'
+                },
+                'ac': {
+                    name: '空调',
+                    power: '1200W',
+                    icon: 'fa-snowflake'
+                },
+                'rice-cooker': {
+                    name: '电饭煲',
+                    power: '1000W',
+                    icon: 'fa-utensils'
+                },
+                'water-heater': {
+                    name: '热水器',
+                    power: '2000W',
+                    icon: 'fa-hot-tub'
+                }
+            };
+            
+            return applianceInfo[applianceId];
+        }
+        
+        // 获取电器最佳使用时间
+        function getBestTimeForAppliance(applianceId) {
+            const currentHour = new Date().getHours();
+            let bestTime = "";
+            
+            switch(applianceId) {
+                case 'washing-machine':
+                    bestTime = currentHour < 12 ? "14:00-16:00" : "明日 10:00-12:00";
+                    break;
+                case 'ev-charging':
+                    bestTime = "22:00-次日 7:00";
+                    break;
+                case 'ac':
+                    bestTime = currentHour < 14 ? "14:00-16:00" : "明日 12:00-14:00";
+                    break;
+                case 'rice-cooker':
+                    bestTime = currentHour < 18 ? "18:00-19:00" : "明日 11:00-12:00";
+                    break;
+                case 'water-heater':
+                    bestTime = "21:00-22:00";
+                    break;
+                default:
+                    bestTime = "稍后";
+            }
+            
+            return bestTime;
+        }
+        
+        // 更新电价信息
+        function updateElectricityPrice(hour, isWeekend) {
+            // 模拟分时电价
+            let price;
+            let period;
+            
+            if (isWeekend) {
+                // 周末统一电价
+                price = 0.38;
+                period = "全天统一价格";
+            } else {
+                // 工作日分时电价
+                if (hour >= 9 && hour < 17) {
+                    price = 0.48;
+                    period = `${hour}:00-${hour+1}:00 峰时段`;
+                } else if (hour >= 17 && hour < 21) {
+                    price = 0.56;
+                    period = `${hour}:00-${hour+1}:00 高峰时段`;
+                } else if (hour >= 21 || hour < 6) {
+                    price = 0.26;
+                    period = hour >= 21 ? `${hour}:00-次日 6:00 低谷时段` : `0:00-6:00 低谷时段`;
+                } else {
+                    price = 0.38;
+                    period = `${hour}:00-${hour+1}:00 平时段`;
+                }
+            }
+            
+            // 更新电价显示
+            const priceElement = document.querySelector('.text-blue-600');
+            const periodElement = document.querySelector('.text-xs.text-gray-500.mt-1');
+            
+            if (priceElement) {
+                priceElement.textContent = price.toFixed(2);
+            }
+            
+            if (periodElement) {
+                periodElement.textContent = period;
+            }
+        }
+        
+        // 初始化家电状态（从本地存储读取）
+        function initApplianceStatus() {
+            // 当页面加载时，从localStorage读取家电状态
+            // 实际应用中应该从服务器获取最新状态
+            const applianceIds = ['washing-machine', 'ev-charging', 'ac', 'rice-cooker', 'water-heater'];
+            
+            // 如果本地没有存储状态，设置默认状态
+            applianceIds.forEach(id => {
+                if (!localStorage.getItem(`appliance_${id}`)) {
+                    localStorage.setItem(`appliance_${id}`, 'off');
+                } else {
+                    // 根据存储的状态更新按钮显示
+                    updateApplianceButtonUI(id, localStorage.getItem(`appliance_${id}`));
+                }
+            });
+        }
+        
+        // 更新家电按钮UI
+        function updateApplianceButtonUI(applianceId, status) {
+            const btnElement = document.getElementById(`btn-${applianceId}`);
+            if (btnElement) {
+                if (status === 'on') {
+                    btnElement.textContent = '已开启';
+                    btnElement.classList.remove('bg-blue-500');
+                    btnElement.classList.add('bg-green-500');
+                    btnElement.onclick = function() { controlAppliance(applianceId, false); };
+                } else {
+                    btnElement.textContent = '立即开启';
+                    btnElement.classList.remove('bg-green-500');
+                    btnElement.classList.add('bg-blue-500');
+                    btnElement.onclick = function() { controlAppliance(applianceId, true); };
+                }
+            }
+        }
+        
+        // 监听来自其他页面的状态变更事件
+        window.addEventListener('storage', function(e) {
+            // 当其他页面更改了localStorage时触发
+            if (e.key && e.key.startsWith('appliance_')) {
+                const applianceId = e.key.replace('appliance_', '');
+                updateApplianceButtonUI(applianceId, e.newValue);
+            }
+        });
+        
+        // 头像相关功能
+        let currentAvatar = localStorage.getItem('userAvatar') || '../images/avatar.png';
+        let tempAvatar = currentAvatar;
+        
+        // 打开头像选择器
+        function openAvatarSelector() {
+            tempAvatar = currentAvatar;
+            document.getElementById('avatar-modal').classList.remove('hidden');
+        }
+        
+        // 关闭头像选择器
+        function closeAvatarSelector() {
+            document.getElementById('avatar-modal').classList.add('hidden');
+        }
+        
+        // 选择预设头像
+        function selectAvatar(avatarPath) {
+            tempAvatar = avatarPath;
+            document.getElementById('user-avatar').src = avatarPath;
+        }
+        
+        // 上传自定义头像
+        function uploadAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    tempAvatar = e.target.result;
+                    document.getElementById('user-avatar').src = e.target.result;
+                };
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // 保存头像设置
+        function saveAvatar() {
+            currentAvatar = tempAvatar;
+            localStorage.setItem('userAvatar', currentAvatar);
+            
+            // 更新所有头像显示
+            document.getElementById('user-avatar').src = currentAvatar;
+            
+            // 关闭弹窗
+            closeAvatarSelector();
+            
+            // 通知用户
+            alert('头像已更新');
+        }
+        
+        // 页面加载初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取并显示发电概览数据
+            const todayGeneration = DataManager.getTodayGeneration();
+            
+            // 更新发电量显示
+            document.querySelector('.text-3xl.font-bold').textContent = todayGeneration.total.toFixed(1);
+            
+            // 更新峰值功率
+            document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(1) .font-medium').textContent = 
+                todayGeneration.peakPower + ' kW';
+            
+            // 更新二氧化碳减排
+            document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(2) .font-medium').textContent = 
+                todayGeneration.co2Reduction + ' kg';
+            
+            // 更新收益估算
+            document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(3) .font-medium').textContent = 
+                '¥' + todayGeneration.income.toFixed(2);
+            
+            // 加载用户姓名
+            const savedName = localStorage.getItem('userName');
+            if (savedName) {
+                document.getElementById('user-name').textContent = savedName;
+            }
+            
+            // 加载保存的头像
+            const savedAvatar = localStorage.getItem('userAvatar');
+            if (savedAvatar) {
+                document.getElementById('user-avatar').src = savedAvatar;
+            }
+            
+            // 初始化家电状态
+            initApplianceStatus();
+            
+            // 添加用电建议更新
+            updatePowerSuggestion();
+            
+            // 每5分钟更新一次用电建议
+            setInterval(updatePowerSuggestion, 5 * 60 * 1000);
+            
+            // 监听数据更新事件
+            window.addEventListener('dataUpdated', function(e) {
+                if (e.detail.type === 'simulation' || e.detail.type === 'power') {
+                    // 获取最新数据
+                    const updatedData = DataManager.getTodayGeneration();
+                    
+                    // 更新总发电量
+                    document.querySelector('.text-3xl.font-bold').textContent = updatedData.total.toFixed(1);
+                    
+                    // 更新其他数据
+                    document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(1) .font-medium').textContent = 
+                        updatedData.peakPower + ' kW';
+                    document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(2) .font-medium').textContent = 
+                        updatedData.co2Reduction + ' kg';
+                    document.querySelector('.flex.justify-between.text-xs.opacity-90 div:nth-child(3) .font-medium').textContent = 
+                        '¥' + updatedData.income.toFixed(2);
+                }
+            });
+            
+            // 监听用户姓名变更
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'userName') {
+                    document.getElementById('user-name').textContent = e.newValue || '张三';
+                }
+            });
+        });
+    </script>
+    
+    <!-- 在页面底部添加对DeepSeek服务的引用 -->
+    <script src="../js/deepseek-service.js"></script>
+</body>
+</html>

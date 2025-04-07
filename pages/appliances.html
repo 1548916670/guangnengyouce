@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - 智能光伏助手</title>
+    <!-- 先加载数据管理脚本 -->
+    <script src="../js/data-manager.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- ECharts图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .chart-container {
+            height: 280px;
+        }
+        
+        .mini-chart {
+            height: 100px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-full">
+    <div class="p-4 pb-20">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold">数据分析</h1>
+            <div class="flex items-center">
+                <button class="p-2">
+                    <i class="fas fa-calendar-alt text-gray-600"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- 分析类型选项卡 -->
+        <div class="flex border-b mb-4 overflow-x-auto">
+            <button class="tab-btn px-4 py-2 text-sm font-medium tab-active" data-tab="trends">发电趋势</button>
+            <button class="tab-btn px-4 py-2 text-sm font-medium" data-tab="income">收益分析</button>
+            <button class="tab-btn px-4 py-2 text-sm font-medium" data-tab="efficiency">效率对比</button>
+            <button class="tab-btn px-4 py-2 text-sm font-medium" data-tab="consumption">用电分析</button>
+        </div>
+        
+        <!-- 时间范围选择器 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex bg-white rounded-lg shadow">
+                <button class="px-3 py-1.5 text-xs font-medium time-range-btn active" data-days="7">7天</button>
+                <button class="px-3 py-1.5 text-xs font-medium time-range-btn" data-days="30">30天</button>
+                <button class="px-3 py-1.5 text-xs font-medium time-range-btn" data-days="90">90天</button>
+                <button class="px-3 py-1.5 text-xs font-medium time-range-btn" data-days="365">1年</button>
+            </div>
+            <button class="text-blue-500 text-sm" id="export-data">
+                <i class="fas fa-download mr-1"></i> 导出数据
+            </button>
+        </div>
+        
+        <!-- 发电趋势分析区域 -->
+        <div class="tab-content block" id="trends-tab">
+            <!-- 主发电趋势图表 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">发电趋势</h2>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        同比增长 12%
+                    </span>
+                </div>
+                <div id="power-trend-chart" class="chart-container"></div>
+            </div>
+            
+            <!-- 天气影响分析 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">天气影响分析</h2>
+                <div id="weather-impact-chart" class="chart-container"></div>
+            </div>
+            
+            <!-- 发电分布数据卡片 -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="bg-white rounded-lg shadow p-3">
+                    <h3 class="text-xs text-gray-500 mb-1">最高发电日</h3>
+                    <p class="text-lg font-bold">31.2 kWh</p>
+                    <p class="text-xs text-gray-500">2025-03-15</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-3">
+                    <h3 class="text-xs text-gray-500 mb-1">平均日发电</h3>
+                    <p class="text-lg font-bold">24.8 kWh</p>
+                    <p class="text-xs text-gray-500">近7天</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-3">
+                    <h3 class="text-xs text-gray-500 mb-1">最低发电日</h3>
+                    <p class="text-lg font-bold">17.5 kWh</p>
+                    <p class="text-xs text-gray-500">2025-03-17</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 收益分析区域 -->
+        <div class="tab-content hidden" id="income-tab">
+            <!-- 主收益趋势图表 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">收益趋势</h2>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                        预计回收期: 5年8个月
+                    </span>
+                </div>
+                <div id="income-trend-chart" class="chart-container"></div>
+            </div>
+            
+            <!-- 收益统计卡片 -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-medium mb-2">本月收益</h3>
+                    <p class="text-2xl font-bold text-green-600">¥486.52</p>
+                    <div class="flex items-center text-xs mt-1">
+                        <span class="text-green-500 flex items-center mr-2">
+                            <i class="fas fa-arrow-up mr-0.5"></i> 8.3%
+                        </span>
+                        <span class="text-gray-500">较上月</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-medium mb-2">年度收益</h3>
+                    <p class="text-2xl font-bold text-green-600">¥5,824.37</p>
+                    <div class="flex items-center text-xs mt-1">
+                        <span class="text-green-500 flex items-center mr-2">
+                            <i class="fas fa-arrow-up mr-0.5"></i> 12.1%
+                        </span>
+                        <span class="text-gray-500">较去年</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 收益构成 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">收益构成</h2>
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm">自发自用节省</span>
+                            <span class="text-sm font-medium">¥321.85 (66%)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 66%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm">余电上网收益</span>
+                            <span class="text-sm font-medium">¥164.67 (34%)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 34%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 效率对比区域 -->
+        <div class="tab-content hidden" id="efficiency-tab">
+            <!-- 设备效率对比 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">设备效率对比</h2>
+                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                        有1个组件需要维护
+                    </span>
+                </div>
+                <div id="component-efficiency-chart" class="chart-container"></div>
+            </div>
+            
+            <!-- 效率影响因素 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">效率影响因素</h2>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm">灰尘积累</span>
+                            <span class="text-sm font-medium text-yellow-600">中度影响</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm">阴影遮挡</span>
+                            <span class="text-sm font-medium text-red-600">严重影响</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-red-500 h-2.5 rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm">组件老化</span>
+                            <span class="text-sm font-medium text-green-600">轻微影响</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 15%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 维护建议 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">维护建议</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-broom text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">清洗组件表面</h3>
+                            <p class="text-xs text-gray-500">建议清洗组件3表面的灰尘积累，预计可提升效率约5%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-tree text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">修剪遮挡物</h3>
+                            <p class="text-xs text-gray-500">建议修剪东侧树木，减少早晨阴影遮挡，预计可提升效率约8%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用电分析区域 -->
+        <div class="tab-content hidden" id="consumption-tab">
+            <!-- 主用电趋势图表 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">用电趋势</h2>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        自发自用率: 73%
+                    </span>
+                </div>
+                <div id="consumption-trend-chart" class="chart-container"></div>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+            <div class="flex justify-around">
+                <a href="home.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="monitoring.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-line text-lg"></i>
+                    <span class="text-xs">监控</span>
+                </a>
+                <a href="devices.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-solar-panel text-lg"></i>
+                    <span class="text-xs">设备</span>
+                </a>
+                <a href="analytics.html" class="flex flex-col items-center text-blue-500">
+                    <i class="fas fa-chart-pie text-lg"></i>
+                    <span class="text-xs">分析</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-cog text-lg"></i>
+                    <span class="text-xs">设置</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量存储图表实例
+        let powerTrendChart = null;
+        let weatherImpactChart = null;
+        let incomeTrendChart = null;
+        let componentEfficiencyChart = null;
+        let consumptionTrendChart = null;
+        
+        // 当前选择的时间范围(默认7天)
+        let currentDays = 7;
+        
+ // 修复选项卡切换问题
+document.addEventListener('DOMContentLoaded', function() {
+    // 清除之前可能已绑定的事件监听
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        // 移除旧的事件监听器
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+    });
+    
+    // 重新绑定选项卡点击事件
+    document.querySelectorAll('.tab-btn').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // 移除所有选项卡的活跃状态
+            document.querySelectorAll('.tab-btn').forEach(t => {
+                t.classList.remove('tab-active');
+            });
+            
+            // 添加当前选项卡的活跃状态
+            this.classList.add('tab-active');
+            
+            // 隐藏所有内容区域
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            
+            // 显示当前选择的内容
+            const tabId = this.getAttribute('data-tab');
+            const tabContent = document.getElementById(`${tabId}-tab`);
+            if (tabContent) {
+                tabContent.classList.remove('hidden');
+                tabContent.classList.add('block');
+                
+                // 重新渲染当前选项卡的图表
+                renderChartsByTab(tabId);
+                
+                // 调试信息
+                console.log(`切换到选项卡: ${tabId}`);
+            } else {
+                console.error(`找不到ID为 ${tabId}-tab 的内容元素`);
+            }
+        });
+    });
+    
+    // 默认加载发电趋势选项卡的图表
+    powerTrendChart = initPowerTrendChart();
+    weatherImpactChart = initWeatherImpactChart();
+    
+    // 设置时间范围按钮的活跃状态和样式
+    document.querySelector('.time-range-btn.active').classList.add('bg-blue-500', 'text-white');
+    
+    // 清除重复的时间范围按钮事件监听
+    document.querySelectorAll('.time-range-btn').forEach(btn => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+    });
+    
+    // 重新绑定时间范围按钮点击事件
+    document.querySelectorAll('.time-range-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 移除所有时间范围按钮的活跃状态
+            document.querySelectorAll('.time-range-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('bg-blue-500');
+                b.classList.remove('text-white');
+            });
+            
+            // 添加当前按钮的活跃状态
+            this.classList.add('active');
+            this.classList.add('bg-blue-500');
+            this.classList.add('text-white');
+            
+            // 更新当前选择的天数
+            currentDays = parseInt(this.getAttribute('data-days'));
+            console.log(`时间范围改为: ${currentDays}天`);
+            
+            // 重新渲染当前选项卡的图表
+            const currentTab = document.querySelector('.tab-btn.tab-active').getAttribute('data-tab');
+            renderChartsByTab(currentTab);
+        });
+    });
+});
+
+// 修改 renderChartsByTab 函数确保图表正确渲染
+function renderChartsByTab(tabId) {
+    console.log(`正在渲染 ${tabId} 选项卡的图表...`);
+    
+    switch(tabId) {
+        case 'trends':
+            if (!powerTrendChart) {
+                powerTrendChart = initPowerTrendChart();
+                console.log('初始化发电趋势图表');
+            } else {
+                updatePowerTrendChart(currentDays);
+                console.log('更新发电趋势图表');
+            }
+            
+            if (!weatherImpactChart) {
+                weatherImpactChart = initWeatherImpactChart();
+                console.log('初始化天气影响图表');
+            } else {
+                weatherImpactChart.resize();
+            }
+            break;
+            
+        case 'income':
+            if (!incomeTrendChart) {
+                incomeTrendChart = initIncomeTrendChart();
+                console.log('初始化收益趋势图表');
+            } else {
+                updateIncomeTrendChart(currentDays);
+                console.log('更新收益趋势图表');
+            }
+            break;
+            
+        case 'efficiency':
+            if (!componentEfficiencyChart) {
+                componentEfficiencyChart = initComponentEfficiencyChart();
+                console.log('初始化组件效率图表');
+            } else {
+                componentEfficiencyChart.resize();
+            }
+            break;
+            
+        case 'consumption':
+            if (!consumptionTrendChart) {
+                consumptionTrendChart = initConsumptionTrendChart();
+                console.log('初始化用电趋势图表');
+            } else {
+                updateConsumptionTrendChart(currentDays);
+                console.log('更新用电趋势图表');
+            }
+            break;
+            
+        default:
+            console.error(`未知选项卡: ${tabId}`);
+    }
+    
+    // 延迟小段时间后强制重绘所有可见图表，解决某些情况下图表不显示的问题
+    setTimeout(() => {
+        const visibleTab = document.querySelector('.tab-content:not(.hidden)');
+        if (visibleTab) {
+            const charts = visibleTab.querySelectorAll('.chart-container');
+            charts.forEach(container => {
+                // 查找与此容器关联的图表实例
+                const chartId = container.id;
+                if (chartId === 'power-trend-chart' && powerTrendChart) {
+                    powerTrendChart.resize();
+                } else if (chartId === 'weather-impact-chart' && weatherImpactChart) {
+                    weatherImpactChart.resize();
+                } else if (chartId === 'income-trend-chart' && incomeTrendChart) {
+                    incomeTrendChart.resize();
+                } else if (chartId === 'component-efficiency-chart' && componentEfficiencyChart) {
+                    componentEfficiencyChart.resize();
+                } else if (chartId === 'consumption-trend-chart' && consumptionTrendChart) {
+                    consumptionTrendChart.resize();
+                }
+            });
+        }
+    }, 100);
+}
+        // 导出数据按钮
+        document.getElementById('export-data').addEventListener('click', function() {
+            alert('数据导出功能开发中...');
+        });
+        
+        // 根据选项卡渲染图表
+        function renderChartsByTab(tabId) {
+            switch(tabId) {
+                case 'trends':
+                    if (!powerTrendChart) {
+                        powerTrendChart = initPowerTrendChart();
+                    } else {
+                        updatePowerTrendChart(currentDays);
+                    }
+                    
+                    if (!weatherImpactChart) {
+                        weatherImpactChart = initWeatherImpactChart();
+                    }
+                    break;
+                    
+                case 'income':
+                    if (!incomeTrendChart) {
+                        incomeTrendChart = initIncomeTrendChart();
+                    } else {
+                        updateIncomeTrendChart(currentDays);
+                    }
+                    break;
+                    
+                case 'efficiency':
+                    if (!componentEfficiencyChart) {
+                        componentEfficiencyChart = initComponentEfficiencyChart();
+                    }
+                    break;
+                    
+                case 'consumption':
+                    if (!consumptionTrendChart) {
+                        consumptionTrendChart = initConsumptionTrendChart();
+                    } else {
+                        updateConsumptionTrendChart(currentDays);
+                    }
+                    break;
+            }
+        }
+        
+        // 发电趋势图表
+        function initPowerTrendChart() {
+            const powerTrendChart = echarts.init(document.getElementById('power-trend-chart'));
+            
+            // 使用默认天数加载图表
+            updatePowerTrendChart(currentDays, powerTrendChart);
+            
+            return powerTrendChart;
+        }
+        
+        function updatePowerTrendChart(days, chart = powerTrendChart) {
+            // 模拟日期和数据
+            const dates = getDateRangeArray(days);
+            const actualData = simulatePowerGeneration(days);
+            const expectedData = simulatePowerGeneration(days, true);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        const date = params[0].axisValue;
+                        let html = `${date}<br>`;
+                        
+                        params.forEach(param => {
+                            const color = param.color;
+                            const seriesName = param.seriesName;
+                            const value = param.value;
+                            html += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:${color}"></span> ${seriesName}: ${value} kWh<br>`;
+                        });
+                        
+                        return html;
+                    }
+                },
+                legend: {
+                    data: ['实际发电量', '预期发电量'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: {
+                        fontSize: 10,
+                        formatter: function(value) {
+                            return value.substring(5); // 只显示月-日
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'kWh',
+                    nameTextStyle: {
+                        fontSize: 10
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '实际发电量',
+                        type: 'line',
+                        data: actualData,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: {
+                            width: 3,
+                            color: '#3b82f6'
+                        },
+                        itemStyle: {
+                            color: '#3b82f6'
+                        }
+                    },
+                    {
+                        name: '预期发电量',
+                        type: 'line',
+                        data: expectedData,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 2,
+                            type: 'dashed',
+                            color: '#93c5fd'
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        // 天气影响图表
+        function initWeatherImpactChart() {
+            const weatherChart = echarts.init(document.getElementById('weather-impact-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['实际效率', '理论效率'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['晴天', '多云', '阴天', '小雨', '大雨']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '效率(%)',
+                    max: 100,
+                    nameTextStyle: {
+                        fontSize: 10
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '实际效率',
+                        type: 'bar',
+                        barWidth: '20%',
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        data: [92, 80, 65, 40, 25]
+                    },
+                    {
+                        name: '理论效率',
+                        type: 'bar',
+                        barWidth: '20%',
+                        itemStyle: {
+                            color: '#93c5fd'
+                        },
+                        data: [95, 85, 70, 45, 30]
+                    }
+                ]
+            };
+            
+            weatherChart.setOption(option);
+            return weatherChart;
+        }
+        
+        // 收益趋势图表
+        function initIncomeTrendChart() {
+            const incomeChart = echarts.init(document.getElementById('income-trend-chart'));
+            
+            // 使用默认天数加载图表
+            updateIncomeTrendChart(currentDays, incomeChart);
+            
+            return incomeChart;
+        }
+        
+        function updateIncomeTrendChart(days, chart = incomeTrendChart) {
+            // 模拟日期和数据
+            const dates = getDateRangeArray(days);
+            const incomeData = simulateIncomeData(days);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        const date = params[0].axisValue;
+                        const value = params[0].value;
+                        return `${date}<br>收益金额: ¥${value}`;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: {
+                        fontSize: 10,
+                        formatter: function(value) {
+                            return value.substring(5);
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '收益(元)',
+                    nameTextStyle: {
+                        fontSize: 10
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '收益金额',
+                        type: 'line',
+                        data: incomeData,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0,
+                                    color: 'rgba(16, 185, 129, 0.3)'
+                                }, {
+                                    offset: 1,
+                                    color: 'rgba(16, 185, 129, 0.05)'
+                                }]
+                            }
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: '#10b981'
+                        },
+                        itemStyle: {
+                            color: '#10b981'
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        // 设备效率对比图表
+        function initComponentEfficiencyChart() {
+            const efficiencyChart = echarts.init(document.getElementById('component-efficiency-chart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        const name = params[0].name;
+                        let html = `${name}<br>`;
+                        
+                        params.forEach(param => {
+                            const color = param.color;
+                            const seriesName = param.seriesName;
+                            const value = param.value;
+                            html += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:${color}"></span> ${seriesName}: ${value}%<br>`;
+                        });
+                        
+                        return html;
+                    }
+                },
+                legend: {
+                    data: ['当前效率', '出厂效率'],
+                    bottom: '0%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['组件1', '组件2', '组件3', '组件4', '组件5', '组件6']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '效率(%)',
+                    min: 70,
+                    max: 100,
+                    nameTextStyle: {
+                        fontSize: 10
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '当前效率',
+                        type: 'bar',
+                        barWidth: '20%',
+                        itemStyle: {
+                            color: function(params) {
+                                // 低于85%的效率显示为红色警告
+                                return params.value < 85 ? '#ef4444' : '#3b82f6';
+                            }
+                        },
+                        data: [88, 92, 85, 82, 86, 91]
+                    },
+                    {
+                        name: '出厂效率',
+                        type: 'bar',
+                        barWidth: '20%',
+                        itemStyle: {
+                            color: '#93c5fd'
+                        },
+                        data: [92, 94, 90, 92, 90, 94]
+                    }
+                ]
+            };
+            
+            efficiencyChart.setOption(option);
+            return efficiencyChart;
+        }
+        
+        // 完成用电分析图表的初始化函数
+function initConsumptionTrendChart() {
+    const consumptionChart = echarts.init(document.getElementById('consumption-trend-chart'));
+    
+    // 使用默认天数加载图表
+    updateConsumptionTrendChart(currentDays, consumptionChart);
+    
+    return consumptionChart;
+}
+
+function updateConsumptionTrendChart(days, chart = consumptionTrendChart) {
+    // 模拟日期和数据
+    const dates = getDateRangeArray(days);
+    const selfData = simulateConsumptionData(days, 'self');
+    const gridData = simulateConsumptionData(days, 'grid');
+    
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
+        legend: {
+            data: ['自发电使用', '电网购电'],
+            bottom: '0%'
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                fontSize: 10,
+                formatter: function(value) {
+                    return value.substring(5);
+                }
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '用电量(kWh)',
+            nameTextStyle: {
+                fontSize: 10
+            },
+            splitLine: {
+                lineStyle: {
+                    type: 'dashed'
+                }
+            }
+        },
+        series: [
+            {
+                name: '自发电使用',
+                type: 'bar',
+                stack: '总量',
+                itemStyle: {
+                    color: '#3b82f6'
+                },
+                data: selfData
+            },
+            {
+                name: '电网购电',
+                type: 'bar',
+                stack: '总量',
+                itemStyle: {
+                    color: '#9ca3af'
+                },
+                data: gridData
+            }
+        ]
+    };
+    
+    chart.setOption(option);
+}
+
+// 日期和数据生成辅助函数
+function getDateRangeArray(days) {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        dates.push(`2025-${month}-${day}`);
+    }
+    
+    return dates;
+}
+
+function simulatePowerGeneration(days, isExpected = false) {
+    const baseValue = 22; // 基础发电量
+    const variation = isExpected ? 2 : 4; // 实际发电波动较大，预期更平稳
+    const data = [];
+    
+    for (let i = 0; i < days; i++) {
+        let value;
+        // 如果是预期值，使用更平滑、略高的曲线
+        if (isExpected) {
+            value = baseValue + Math.sin(i / (days - 1) * Math.PI) * 3;
+        } else {
+            // 实际值有更多随机波动
+            const dayFactor = Math.sin(i / (days - 1) * Math.PI) * 2; // 一个周期性因素
+            const randomFactor = (Math.random() * variation * 2 - variation); // 随机波动
+            value = baseValue + dayFactor + randomFactor;
+        }
+        data.push(parseFloat(value.toFixed(1)));
+    }
+    
+    return data;
+}
+
+function simulateIncomeData(days) {
+    const baseIncome = 16; // 基础收益
+    const variation = 3; // 波动范围
+    const data = [];
+    
+    for (let i = 0; i < days; i++) {
+        // 一些随机波动，但保持相对平稳上升趋势
+        const trendFactor = i / days * 2; // 轻微上升趋势
+        const randomFactor = (Math.random() * variation - variation/2); 
+        const value = baseIncome + trendFactor + randomFactor;
+        data.push(parseFloat(value.toFixed(2)));
+    }
+    
+    return data;
+}
+
+function simulateConsumptionData(days, type) {
+    const baseSelf = 10; // 基础自发自用量
+    const baseGrid = 8; // 基础电网购电量
+    const variation = 4; // 波动范围
+    const data = [];
+    
+    for (let i = 0; i < days; i++) {
+        if (type === 'self') {
+            // 自发自用量受天气和季节影响较大
+            const dayFactor = Math.sin(i / (days - 1) * Math.PI) * 2;
+            const randomFactor = (Math.random() * variation - variation/2);
+            const value = baseSelf + dayFactor + randomFactor;
+            data.push(parseFloat(Math.max(0, value).toFixed(1))); // 确保不为负
+        } else {
+            // 电网购电量与自发自用成反比
+            const selfValue = data[i] || baseSelf;
+            const totalNeed = 18 + (Math.random() * 3 - 1.5); // 总用电需求
+            const value = Math.max(0, totalNeed - selfValue); // 电网购电 = 总需求 - 自发自用
+            data.push(parseFloat(value.toFixed(1)));
+        }
+    }
+    
+    return data;
+}
+
+// 窗口大小调整时重新渲染图表
+window.addEventListener('resize', function() {
+    if (powerTrendChart) powerTrendChart.resize();
+    if (weatherImpactChart) weatherImpactChart.resize();
+    if (incomeTrendChart) incomeTrendChart.resize();
+    if (componentEfficiencyChart) componentEfficiencyChart.resize();
+    if (consumptionTrendChart) consumptionTrendChart.resize();
+});
+
+// 初始化所有图表
+document.addEventListener('DOMContentLoaded', function() {
+    // 默认加载发电趋势选项卡的图表
+    powerTrendChart = initPowerTrendChart();
+    weatherImpactChart = initWeatherImpactChart();
+    
+    // 设置时间范围按钮的活跃状态和样式
+    document.querySelector('.time-range-btn.active').classList.add('bg-blue-500', 'text-white');
+    
+    // 激活点击处理
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (!btn.onclick) {
+            btn.addEventListener('click', function() {
+                // 移除所有选项卡的活跃状态
+                document.querySelectorAll('.tab-btn').forEach(t => {
+                    t.classList.remove('tab-active');
+                });
+                
+                // 添加当前选项卡的活跃状态
+                this.classList.add('tab-active');
+                
+                // 隐藏所有内容区域
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                });
+                
+                // 显示当前选择的内容
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+                document.getElementById(`${tabId}-tab`).classList.add('block');
+                
+                // 重新渲染当前选项卡的图表
+                renderChartsByTab(tabId);
+            });
+        }
+    });
+});

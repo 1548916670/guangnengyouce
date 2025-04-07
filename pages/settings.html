@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - 智能光伏助手</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-100 h-full">
+    <!-- 头像选择器模态框 -->
+    <div id="avatar-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-4 w-80 max-w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">更换头像</h3>
+                <button onclick="closeAvatarSelector()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-2">选择以下头像</p>
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer bg-indigo-500 flex items-center justify-center" onclick="selectAvatar('https://ui-avatars.com/api/?name=A1&background=4F46E5&color=fff')">
+                        <img src="../images/avatar-1.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=A1&background=4F46E5&color=fff'">
+                    </div>
+                    <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer bg-cyan-500 flex items-center justify-center" onclick="selectAvatar('https://ui-avatars.com/api/?name=A2&background=06B6D4&color=fff')">
+                        <img src="../images/avatar-2.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=A2&background=06B6D4&color=fff'">
+                    </div>
+                    <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer bg-pink-500 flex items-center justify-center" onclick="selectAvatar('https://ui-avatars.com/api/?name=A3&background=EC4899&color=fff')">
+                        <img src="../images/avatar-3.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=A3&background=EC4899&color=fff'">
+                    </div>
+                    <div class="avatar-option w-16 h-16 rounded-full overflow-hidden cursor-pointer bg-amber-500 flex items-center justify-center" onclick="selectAvatar('https://ui-avatars.com/api/?name=A4&background=F59E0B&color=fff')">
+                        <img src="../images/avatar-4.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=A4&background=F59E0B&color=fff'">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-2">或上传自定义头像</p>
+                <label for="avatar-upload" class="block w-full py-2 px-3 text-center bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100">
+                    <i class="fas fa-upload mr-1"></i> 从设备中选择
+                </label>
+                <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
+            </div>
+            
+            <div class="flex justify-end mt-2">
+                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg mr-2" onclick="closeAvatarSelector()">取消</button>
+                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg" onclick="saveAvatar()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-4 h-full">
+        <h1 class="text-xl font-bold mb-4">设置</h1>
+        
+        <!-- 主设置内容 -->
+        <div id="main-settings" class="bg-white rounded-lg shadow mb-4">
+            <a href="javascript:void(0)" onclick="navigateToSubpage('profile')" class="block p-4 border-b">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium">个人资料</h3>
+                        <p class="text-sm text-gray-500">修改您的个人信息</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </a>
+            
+            <a href="javascript:void(0)" onclick="navigateToSubpage('notifications')" class="block p-4 border-b">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium">通知设置</h3>
+                        <p class="text-sm text-gray-500">管理应用通知</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </a>
+            
+            <a href="javascript:void(0)" onclick="navigateToSubpage('security')" class="block p-4 border-b">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium">安全设置</h3>
+                        <p class="text-sm text-gray-500">密码和账户安全</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </a>
+            
+            <a href="javascript:void(0)" onclick="navigateToSubpage('about')" class="block p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium">关于</h3>
+                        <p class="text-sm text-gray-500">应用信息和版本</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </a>
+        </div>
+        
+        <!-- 个人资料子页面 -->
+        <div id="profile-subpage" class="hidden">
+            <div class="flex items-center mb-4">
+                <button onclick="backToMainSettings()" class="mr-2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold">个人资料</h2>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex items-center justify-center mb-4">
+                    <div id="profile-avatar" class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden cursor-pointer" onclick="openAvatarSelector()">
+                        <img id="profile-avatar-img" src="../images/avatar.png" alt="用户头像" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=4F46E5&color=fff'">
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                        <input id="user-name-input" type="text" value="张三" class="w-full p-2 border rounded">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">电话</label>
+                        <input id="user-phone-input" type="tel" value="13800138000" class="w-full p-2 border rounded">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">电子邮箱</label>
+                        <input id="user-email-input" type="email" value="example@mail.com" class="w-full p-2 border rounded">
+                    </div>
+                    
+                    <button id="save-profile-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 通知设置子页面 -->
+        <div id="notifications-subpage" class="hidden">
+            <div class="flex items-center mb-4">
+                <button onclick="backToMainSettings()" class="mr-2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold">通知设置</h2>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium">推送通知</h3>
+                            <p class="text-sm text-gray-500">接收所有应用通知</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium">故障警报</h3>
+                            <p class="text-sm text-gray-500">设备故障时接收提醒</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium">每日报告</h3>
+                            <p class="text-sm text-gray-500">接收每日发电情况报告</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 安全设置子页面 -->
+        <div id="security-subpage" class="hidden">
+            <div class="flex items-center mb-4">
+                <button onclick="backToMainSettings()" class="mr-2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold">安全设置</h2>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="space-y-4">
+                    <a href="javascript:void(0)" class="block">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">修改密码</h3>
+                                <p class="text-sm text-gray-500">更新您的登录密码</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </a>
+                    
+                    <div class="pt-2 pb-2 border-t border-b">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">指纹登录</h3>
+                                <p class="text-sm text-gray-500">使用指纹快速登录</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <a href="javascript:void(0)" class="block pt-2">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">设备管理</h3>
+                                <p class="text-sm text-gray-500">管理已登录的设备</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 关于子页面 -->
+        <div id="about-subpage" class="hidden">
+            <div class="flex items-center mb-4">
+                <button onclick="backToMainSettings()" class="mr-2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold">关于</h2>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex flex-col items-center justify-center mb-4">
+                    <div class="w-24 h-24 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                        <i class="fas fa-solar-panel text-4xl text-blue-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">智能光伏助手</h3>
+                    <p class="text-gray-500">版本 1.0.0</p>
+                </div>
+                
+                <div class="space-y-2 border-t pt-4">
+                    <a href="javascript:void(0)" class="block">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">使用条款</h3>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </a>
+                    
+                    <a href="javascript:void(0)" class="block">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">隐私政策</h3>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </a>
+                    
+                    <a href="javascript:void(0)" class="block">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">检查更新</h3>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <button id="logout-btn" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-medium">
+            退出登录
+        </button>
+        
+        <!-- 底部导航栏 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+            <div class="flex justify-around">
+                <a href="home.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="monitoring.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-line text-lg"></i>
+                    <span class="text-xs">监控</span>
+                </a>
+                <a href="devices.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-solar-panel text-lg"></i>
+                    <span class="text-xs">设备</span>
+                </a>
+                <a href="analytics.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-pie text-lg"></i>
+                    <span class="text-xs">分析</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center text-blue-500">
+                    <i class="fas fa-cog text-lg"></i>
+                    <span class="text-xs">设置</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 头像相关功能
+        let currentAvatar = localStorage.getItem('userAvatar') || '../images/avatar.png';
+        let tempAvatar = currentAvatar;
+
+        // 打开头像选择器
+        function openAvatarSelector() {
+            tempAvatar = currentAvatar;
+            document.getElementById('avatar-modal').classList.remove('hidden');
+        }
+
+        // 关闭头像选择器
+        function closeAvatarSelector() {
+            document.getElementById('avatar-modal').classList.add('hidden');
+        }
+
+        // 选择预设头像
+        function selectAvatar(avatarPath) {
+            tempAvatar = avatarPath;
+            
+            // 更新头像显示
+            document.getElementById('profile-avatar-img').src = avatarPath;
+        }
+
+        // 上传自定义头像
+        function uploadAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    tempAvatar = e.target.result;
+                    
+                    // 更新头像显示
+                    document.getElementById('profile-avatar-img').src = e.target.result;
+                };
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 保存头像设置
+        function saveAvatar() {
+            currentAvatar = tempAvatar;
+            localStorage.setItem('userAvatar', currentAvatar);
+            
+            // 更新所有头像显示
+            document.getElementById('profile-avatar-img').src = currentAvatar;
+            
+            // 通知其他页面更新头像
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'userAvatar',
+                newValue: currentAvatar,
+                url: window.location.href
+            }));
+            
+            // 关闭弹窗
+            closeAvatarSelector();
+            
+            // 通知用户
+            alert('头像已更新');
+        }
+        
+        // 页面导航函数
+        function navigateToSubpage(subpageId) {
+            // 隐藏主设置页面
+            document.getElementById('main-settings').classList.add('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            
+            // 显示对应子页面
+            document.getElementById(subpageId + '-subpage').classList.remove('hidden');
+        }
+        
+        // 返回主设置页面
+        function backToMainSettings() {
+            // 隐藏所有子页面
+            const subpages = document.querySelectorAll('[id$="-subpage"]');
+            subpages.forEach(subpage => {
+                subpage.classList.add('hidden');
+            });
+            
+            // 显示主设置页面
+            document.getElementById('main-settings').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.remove('hidden');
+        }
+        
+        // 个人资料功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取UI元素
+            const userNameInput = document.getElementById('user-name-input');
+            const userPhoneInput = document.getElementById('user-phone-input');
+            const userEmailInput = document.getElementById('user-email-input');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const profileAvatarImg = document.getElementById('profile-avatar-img');
+            
+            // 加载已保存的个人资料
+            const savedName = localStorage.getItem('userName');
+            const savedPhone = localStorage.getItem('userPhone');
+            const savedEmail = localStorage.getItem('userEmail');
+            const savedAvatar = localStorage.getItem('userAvatar');
+            
+            // 如果有保存的数据，填充到表单
+            if (savedName) userNameInput.value = savedName;
+            if (savedPhone) userPhoneInput.value = savedPhone;
+            if (savedEmail) userEmailInput.value = savedEmail;
+            if (savedAvatar) profileAvatarImg.src = savedAvatar;
+            
+            // 保存个人资料
+            saveProfileBtn.addEventListener('click', function() {
+                // 获取表单值
+                const name = userNameInput.value.trim();
+                const phone = userPhoneInput.value.trim();
+                const email = userEmailInput.value.trim();
+                
+                // 简单验证
+                if (!name) {
+                    alert('请输入姓名');
+                    return;
+                }
+                
+                // 保存到localStorage
+                localStorage.setItem('userName', name);
+                localStorage.setItem('userPhone', phone);
+                localStorage.setItem('userEmail', email);
+                
+                // 通知其他页面更新
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'userName',
+                    newValue: name,
+                    url: window.location.href
+                }));
+                
+                // 显示成功消息
+                alert('个人资料已更新');
+                
+                // 返回主设置页面
+                backToMainSettings();
+            });
+            
+            // 监听存储事件，同步更新头像
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'userAvatar' && profileAvatarImg) {
+                    profileAvatarImg.src = e.newValue;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

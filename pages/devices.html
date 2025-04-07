@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备管理 - 智能光伏助手</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-100 h-full">
+    <div class="p-4 pb-20 h-full">
+        <h1 class="text-xl font-bold mb-4">设备管理</h1>
+        
+        <!-- 设备类型选择 -->
+        <div class="flex mb-4 overflow-x-auto py-2">
+            <button class="device-tab active-tab whitespace-nowrap px-4 py-2 mr-2 rounded-full bg-blue-500 text-white">
+                光伏设备
+            </button>
+            <button class="device-tab whitespace-nowrap px-4 py-2 mr-2 rounded-full bg-gray-200">
+                家用电器
+            </button>
+            <button class="device-tab whitespace-nowrap px-4 py-2 rounded-full bg-gray-200">
+                智能设备
+            </button>
+        </div>
+        
+        <!-- 光伏设备列表 -->
+        <div id="pv-devices" class="device-content">
+            <!-- 设备搜索框 -->
+            <div class="relative mb-4">
+                <input type="text" placeholder="搜索设备..." class="w-full p-3 pl-10 bg-white rounded-lg shadow">
+                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+            </div>
+            
+            <!-- 光伏设备卡片 -->
+            <div class="grid grid-cols-1 gap-4">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-solar-panel text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">屋顶光伏板组 A</h3>
+                                <p class="text-xs text-gray-500">ID: PV202405001</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">正常</span>
+                    </div>
+                    
+                    <div class="border-t border-b py-2 my-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">当前功率</span>
+                            <span class="font-medium">2.8 kW</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">今日发电量</span>
+                            <span class="font-medium">14.2 kWh</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-2 py-2 bg-blue-50 text-blue-600 rounded-lg">
+                        查看详情
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-solar-panel text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">屋顶光伏板组 B</h3>
+                                <p class="text-xs text-gray-500">ID: PV202405002</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">正常</span>
+                    </div>
+                    
+                    <div class="border-t border-b py-2 my-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">当前功率</span>
+                            <span class="font-medium">2.5 kW</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">今日发电量</span>
+                            <span class="font-medium">12.7 kWh</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-2 py-2 bg-blue-50 text-blue-600 rounded-lg">
+                        查看详情
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-hdd text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">逆变器 SolarMax</h3>
+                                <p class="text-xs text-gray-500">ID: INV202405001</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">需检查</span>
+                    </div>
+                    
+                    <div class="border-t border-b py-2 my-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">运行状态</span>
+                            <span class="font-medium">97% 效率</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">温度</span>
+                            <span class="font-medium">45°C</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-2 py-2 bg-blue-50 text-blue-600 rounded-lg">
+                        查看详情
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+   <!-- 修改家用电器列表部分 -->
+<div id="home-appliances" class="device-content hidden">
+    <!-- 设备搜索框 -->
+    <div class="relative mb-4">
+        <input type="text" placeholder="搜索电器..." class="w-full p-3 pl-10 bg-white rounded-lg shadow">
+        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+    </div>
+    
+    <!-- 添加电器按钮 -->
+    <button class="w-full py-3 mb-4 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+        <i class="fas fa-plus mr-2"></i> 添加新电器
+    </button>
+    
+    <!-- 家用电器卡片 - 添加ID appliances-section -->
+    <div id="appliances-section" class="grid grid-cols-1 gap-4">
+        <!-- 空调 -->
+        <div id="appliance-ac" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-snowflake text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">客厅空调</h3>
+                        <p class="text-xs text-gray-500">格力 - 1.5P 变频</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已开启</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-green-500"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">1200W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">3.2 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 12:00-16:00</span>
+                <button class="toggle-button px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg" onclick="controlAppliance('ac', false)">
+                    关闭
+                </button>
+            </div>
+        </div>
+        
+        <!-- 洗衣机 -->
+        <div id="appliance-washing-machine" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-tshirt text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">洗衣机</h3>
+                        <p class="text-xs text-gray-500">海尔 - 8kg 滚筒</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已关闭</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-gray-300"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">800W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">0.5 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 10:00-14:00</span>
+                <button class="toggle-button px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg" onclick="controlAppliance('washing-machine', true)">
+                    开启
+                </button>
+            </div>
+        </div>
+        
+        <!-- 电视 -->
+        <div id="appliance-tv" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-tv text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">客厅电视</h3>
+                        <p class="text-xs text-gray-500">小米 - 65英寸</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已开启</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-green-500"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">150W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">0.8 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 任意</span>
+                <button class="toggle-button px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg" onclick="controlAppliance('tv', false)">
+                    关闭
+                </button>
+            </div>
+        </div>
+        
+        <!-- 电动车充电器 -->
+        <div id="appliance-ev-charging" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-charging-station text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">电动车充电器</h3>
+                        <p class="text-xs text-gray-500">通用型 - 7kW</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已关闭</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-gray-300"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">1500W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">0 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 11:00-15:00</span>
+                <button class="toggle-button px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg" onclick="controlAppliance('ev-charging', true)">
+                    开启
+                </button>
+            </div>
+        </div>
+        
+        <!-- 添加电饭煲 -->
+        <div id="appliance-rice-cooker" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-utensils text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">电饭煲</h3>
+                        <p class="text-xs text-gray-500">美的 - 4L 智能</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已关闭</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-gray-300"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">1000W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">0.2 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 18:00-20:00</span>
+                <button class="toggle-button px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg" onclick="controlAppliance('rice-cooker', true)">
+                    开启
+                </button>
+            </div>
+        </div>
+        
+        <!-- 热水器 -->
+        <div id="appliance-water-heater" class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-hot-tub text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">热水器</h3>
+                        <p class="text-xs text-gray-500">海尔 - 60L 电热</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="status-text text-xs mr-2">已关闭</span>
+                    <span class="status-indicator w-3 h-3 rounded-full bg-gray-300"></span>
+                </div>
+            </div>
+            
+            <div class="border-t border-b py-2 my-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">功率</span>
+                    <span class="font-medium">2000W</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">今日用电</span>
+                    <span class="font-medium">1.5 kWh</span>
+                </div>
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-sm text-gray-500">建议使用时段: 20:00-22:00</span>
+                <button class="toggle-button px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg" onclick="controlAppliance('water-heater', true)">
+                    开启
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+        
+        <!-- 智能设备列表 -->
+        <div id="smart-devices" class="device-content hidden">
+            <!-- 智能设备内容 -->
+            <div class="bg-white rounded-lg p-8 text-center">
+                <div class="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-plug text-gray-400 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium mb-2">暂无智能设备</h3>
+                <p class="text-gray-500 mb-4">添加智能设备以享受更多功能</p>
+                <button class="py-2 px-4 bg-blue-500 text-white rounded-lg">
+                    添加设备
+                </button>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+            <div class="flex justify-around">
+                <a href="home.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="monitoring.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-line text-lg"></i>
+                    <span class="text-xs">监控</span>
+                </a>
+                <a href="devices.html" class="flex flex-col items-center text-blue-500">
+                    <i class="fas fa-solar-panel text-lg"></i>
+                    <span class="text-xs">设备</span>
+                </a>
+                <a href="analytics.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-pie text-lg"></i>
+                    <span class="text-xs">分析</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-cog text-lg"></i>
+                    <span class="text-xs">设置</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+        <!-- 之前的脚本保持不变 -->
+        <script>
+            // 设备类型切换
+            const deviceTabs = document.querySelectorAll('.device-tab');
+            const deviceContents = document.querySelectorAll('.device-content');
+            
+            deviceTabs.forEach((tab, index) => {
+                tab.addEventListener('click', () => {
+                    // 移除所有tab的active状态
+                    deviceTabs.forEach(t => {
+                        t.classList.remove('active-tab');
+                        t.classList.remove('bg-blue-500');
+                        t.classList.remove('text-white');
+                        t.classList.add('bg-gray-200');
+                    });
+                    
+                    // 设置当前tab为active
+                    tab.classList.add('active-tab');
+                    tab.classList.add('bg-blue-500');
+                    tab.classList.add('text-white');
+                    tab.classList.remove('bg-gray-200');
+                    
+                    // 隐藏所有内容
+                    deviceContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 显示对应内容
+                    if (index === 0) {
+                        document.getElementById('pv-devices').classList.remove('hidden');
+                    } else if (index === 1) {
+                        document.getElementById('home-appliances').classList.remove('hidden');
+                        // 加载家电状态
+                        initApplianceStatus();
+                    } else if (index === 2) {
+                        document.getElementById('smart-devices').classList.remove('hidden');
+                    }
+                });
+            });
+    
+            // 家电控制相关代码 - 新增
+            
+            // 初始化家电状态
+            function initApplianceStatus() {
+                // 从localStorage读取所有家电状态并更新UI
+                const applianceIds = ['washing-machine', 'ev-charging', 'ac', 'rice-cooker', 'water-heater', 'tv'];
+                
+                applianceIds.forEach(id => {
+                    const status = localStorage.getItem(`appliance_${id}`) || 'off';
+                    updateApplianceUI(id, status);
+                });
+            }
+            
+            // 更新家电UI
+            function updateApplianceUI(applianceId, status) {
+                // 查找对应家电的UI元素并更新
+                const element = document.getElementById(`appliance-${applianceId}`);
+                if (element) {
+                    const statusIndicator = element.querySelector('.status-indicator');
+                    const statusText = element.querySelector('.status-text');
+                    const toggleButton = element.querySelector('.toggle-button');
+                    
+                    if (status === 'on') {
+                        statusIndicator?.classList.remove('bg-gray-300');
+                        statusIndicator?.classList.add('bg-green-500');
+                        statusText.textContent = '已开启';
+                        toggleButton.textContent = '关闭';
+                        toggleButton.classList.remove('bg-blue-500');
+                        toggleButton.classList.add('bg-red-500');
+                        toggleButton.onclick = function() { controlAppliance(applianceId, false); };
+                    } else {
+                        statusIndicator?.classList.remove('bg-green-500');
+                        statusIndicator?.classList.add('bg-gray-300');
+                        statusText.textContent = '已关闭';
+                        toggleButton.textContent = '开启';
+                        toggleButton.classList.remove('bg-red-500');
+                        toggleButton.classList.add('bg-blue-500');
+                        toggleButton.onclick = function() { controlAppliance(applianceId, true); };
+                    }
+                }
+            }
+            
+            // 控制家电函数
+            function controlAppliance(applianceId, turnOn) {
+                // 更新本地存储
+                if (turnOn) {
+                    localStorage.setItem(`appliance_${applianceId}`, 'on');
+                    alert(`已开启: ${getApplianceName(applianceId)}`);
+                } else {
+                    localStorage.setItem(`appliance_${applianceId}`, 'off');
+                    alert(`已关闭: ${getApplianceName(applianceId)}`);
+                }
+                
+                // 更新UI
+                updateApplianceUI(applianceId, turnOn ? 'on' : 'off');
+                
+                // 发送事件通知其他页面
+                const event = new CustomEvent('applianceStatusChanged', { 
+                    detail: { id: applianceId, status: turnOn ? 'on' : 'off' } 
+                });
+                window.dispatchEvent(event);
+                
+                // 实际应用中，这里应该发送请求到服务器控制智能家电
+            }
+            
+            // 获取家电名称
+            function getApplianceName(applianceId) {
+                const applianceNames = {
+                    'washing-machine': '洗衣机',
+                    'ev-charging': '电动车充电器',
+                    'ac': '空调',
+                    'rice-cooker': '电饭煲',
+                    'water-heater': '热水器',
+                    'tv': '电视',
+                    'fridge': '冰箱',
+                    'microwave': '微波炉',
+                    'dishwasher': '洗碗机'
+                };
+                return applianceNames[applianceId] || '未知设备';
+            }
+            
+            // 监听来自其他页面的状态变更事件
+            window.addEventListener('storage', function(e) {
+                // 当其他页面更改了localStorage时触发
+                if (e.key && e.key.startsWith('appliance_')) {
+                    const applianceId = e.key.replace('appliance_', '');
+                    updateApplianceUI(applianceId, e.newValue);
+                }
+            });
+            
+            // 页面加载时
+            document.addEventListener('DOMContentLoaded', function() {
+                // 如果URL中有锚点指向appliances部分，显示家电选项卡
+                if (window.location.hash === '#appliances') {
+                    // 模拟点击家用电器选项卡
+                    deviceTabs[1].click();
+                    
+                    // 滚动到家电部分
+                    const appliancesSection = document.getElementById('appliances-section');
+                    if (appliancesSection) {
+                        setTimeout(() => {
+                            appliancesSection.scrollIntoView({ behavior: 'smooth' });
+                        }, 300);
+                    }
+                }
+            });
+        </script>
+    </body>
+    </html>
